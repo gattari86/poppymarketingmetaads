@@ -15,7 +15,10 @@ export default function CreateAdSetModal({
   onSuccess,
 }: CreateAdSetModalProps) {
   const [name, setName] = useState("");
-  const [dailyBudget, setDailyBudget] = useState("100");
+  const [dailyBudget, setDailyBudget] = useState("10");
+  const [optimizationGoal, setOptimizationGoal] = useState("REACH");
+  const [billingEvent, setBillingEvent] = useState("IMPRESSIONS");
+  const [bidAmount, setBidAmount] = useState("0.05");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -25,14 +28,25 @@ export default function CreateAdSetModal({
     setError("");
 
     try {
+      if (!name.trim()) throw new Error("Ad set name is required");
+      if (!dailyBudget || parseFloat(dailyBudget) <= 0) {
+        throw new Error("Daily budget must be greater than 0");
+      }
+      if (!bidAmount || parseFloat(bidAmount) <= 0) {
+        throw new Error("Bid amount must be greater than 0");
+      }
+
       const response = await fetch(`/api/adsets?campaignId=${campaignId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
+          name: name.trim(),
           campaign_id: campaignId,
-          daily_budget: parseInt(dailyBudget) * 100, // Meta API expects cents
+          daily_budget: parseFloat(dailyBudget) * 100, // Meta API expects cents
           status: "PAUSED",
+          optimization_goal: optimizationGoal,
+          billing_event: billingEvent,
+          bid_amount: parseFloat(bidAmount) * 100, // Convert dollars to cents
           targeting: {
             geo_locations: [{ country: "US" }],
           },
@@ -40,7 +54,14 @@ export default function CreateAdSetModal({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create ad set");
+        let errorMessage = "Failed to create ad set";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch {
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -78,17 +99,84 @@ export default function CreateAdSetModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Daily Budget (USD)
             </label>
-            <input
-              type="number"
-              value={dailyBudget}
-              onChange={(e) => setDailyBudget(e.target.value)}
-              min="1"
-              step="0.01"
-              required
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
-            />
+            <div className="flex items-center">
+              <span className="text-gray-700 font-medium mr-2">$</span>
+              <input
+                type="number"
+                value={dailyBudget}
+                onChange={(e) => setDailyBudget(e.target.value)}
+                placeholder="10.00"
+                min="0.01"
+                step="0.01"
+                required
+                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+              />
+              <span className="text-gray-500 text-sm ml-2">/day</span>
+            </div>
             <p className="text-xs text-gray-500 mt-1">
-              Minimum daily budget is usually $1
+              Minimum daily budget is usually $1.00
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Optimization Goal
+            </label>
+            <select
+              value={optimizationGoal}
+              onChange={(e) => setOptimizationGoal(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+            >
+              <option value="REACH">Reach (Maximize impressions)</option>
+              <option value="IMPRESSIONS">Impressions (Pay per impression)</option>
+              <option value="LINK_CLICKS">Link Clicks (Pay per click)</option>
+              <option value="VIDEO_VIEWS">Video Views (Pay per view)</option>
+              <option value="LANDING_PAGE_VIEWS">Landing Page Views</option>
+              <option value="POST_ENGAGEMENT">Post Engagement</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              What to optimize the ad set for
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Billing Event
+            </label>
+            <select
+              value={billingEvent}
+              onChange={(e) => setBillingEvent(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+            >
+              <option value="IMPRESSIONS">Impressions (CPM)</option>
+              <option value="LINK_CLICKS">Link Clicks (CPC)</option>
+              <option value="VIDEO_VIEWS">Video Views</option>
+              <option value="VIDEO_10_SEC_VIEWS">10-Second Video Views</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              When Meta charges you
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Bid Amount (USD)
+            </label>
+            <div className="flex items-center">
+              <span className="text-gray-700 font-medium mr-2">$</span>
+              <input
+                type="number"
+                value={bidAmount}
+                onChange={(e) => setBidAmount(e.target.value)}
+                placeholder="0.05"
+                min="0.01"
+                step="0.01"
+                required
+                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Maximum bid per event (e.g., per impression or click)
             </p>
           </div>
 

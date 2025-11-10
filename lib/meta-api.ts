@@ -136,11 +136,39 @@ export async function createAdSet(
     status: string;
     daily_budget?: number;
     targeting?: Record<string, unknown>;
+    bid_amount?: number;
+    optimization_goal?: string;
+    billing_event?: string;
   },
   accessToken: string
 ) {
   try {
-    const response = await metaApi.post(`/${campaignId}/adsets`, data, {
+    // Meta API v24 requires specific parameters for ad set creation
+    const adSetData: Record<string, any> = {
+      name: data.name,
+      campaign_id: campaignId,
+      status: data.status,
+      daily_budget: data.daily_budget || 1000, // Default $10/day in cents
+      targeting: data.targeting || {
+        geo_locations: [{ country: "US" }],
+      },
+      // REQUIRED: optimization_goal - what to optimize for
+      optimization_goal: data.optimization_goal || "REACH",
+      // REQUIRED: billing_event - when to charge (IMPRESSIONS, LINK_CLICKS, etc)
+      billing_event: data.billing_event || "IMPRESSIONS",
+      // RECOMMENDED: bid_amount - how much to bid per event
+      bid_amount: data.bid_amount || 500, // Default 5 cents
+    };
+
+    console.log("Creating ad set with v24 parameters:", {
+      campaignId,
+      name: adSetData.name,
+      daily_budget: adSetData.daily_budget,
+      optimization_goal: adSetData.optimization_goal,
+      billing_event: adSetData.billing_event,
+    });
+
+    const response = await metaApi.post(`/${campaignId}/adsets`, adSetData, {
       params: {
         access_token: accessToken,
       },
@@ -156,18 +184,36 @@ export async function createAd(
   adSetId: string,
   data: {
     name: string;
-    adset_id: string;
+    adset_id?: string;
     creative: {
       creative_id?: string;
       title?: string;
       body?: string;
       image_url?: string;
     };
+    status?: string;
   },
   accessToken: string
 ) {
   try {
-    const response = await metaApi.post(`/${adSetId}/ads`, data, {
+    // Meta API v24 requires specific parameters for ad creation
+    const adData: Record<string, any> = {
+      name: data.name,
+      adset_id: adSetId,
+      creative: data.creative,
+      // REQUIRED in v24: status - should be PAUSED for new ads
+      status: data.status || "PAUSED",
+    };
+
+    console.log("Creating ad with v24 parameters:", {
+      adSetId,
+      name: adData.name,
+      status: adData.status,
+      hasCreative: !!adData.creative,
+      creativeType: adData.creative.creative_id ? "existing" : "new",
+    });
+
+    const response = await metaApi.post(`/${adSetId}/ads`, adData, {
       params: {
         access_token: accessToken,
       },

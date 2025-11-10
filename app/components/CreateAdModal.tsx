@@ -42,6 +42,7 @@ export default function CreateAdModal({
       const requestBody: Record<string, unknown> = {
         name: name.trim(),
         adset_id: adSetId,
+        status: "PAUSED", // Meta v24 requires status to be set
       };
 
       if (useExistingCreative) {
