@@ -2,18 +2,6 @@
   "framework": "nextjs",
   "buildCommand": "next build",
   "outputDirectory": ".next",
-  "env": [
-    "META_APP_ID",
-    "META_APP_SECRET",
-    "META_SYSTEM_USER_TOKEN",
-    "META_GRAPH_VERSION",
-    "NEXTAUTH_SECRET",
-    "NEXTAUTH_URL",
-    "EMAIL_SUPPORT",
-    "EMAIL_INFO",
-    "SUBAPACE_URL",
-    "SUBAPACE_KEY"
-  ],
   "headers": [
     {
       "source": "/(.*)",
