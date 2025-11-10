@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ChartBar, Gear, Lock } from "@phosphor-icons/react";
 
 export default function Home() {
   const { status } = useSession();
@@ -75,7 +76,9 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Feature 1 */}
             <div className="card hover:shadow-soft transition-shadow">
-              <div className="text-4xl mb-4">📊</div>
+              <div className="mb-4">
+                <ChartBar size={48} weight="duotone" className="text-poppy-dark-purple" />
+              </div>
               <h3 className="text-xl font-poppins font-semibold text-gray-900 mb-3">
                 Campaign Management
               </h3>
@@ -86,7 +89,9 @@ export default function Home() {
 
             {/* Feature 2 */}
             <div className="card hover:shadow-soft transition-shadow">
-              <div className="text-4xl mb-4">⚙️</div>
+              <div className="mb-4">
+                <Gear size={48} weight="duotone" className="text-poppy-dark-purple" />
+              </div>
               <h3 className="text-xl font-poppins font-semibold text-gray-900 mb-3">
                 Automated Rules
               </h3>
@@ -97,7 +102,9 @@ export default function Home() {
 
             {/* Feature 3 */}
             <div className="card hover:shadow-soft transition-shadow">
-              <div className="text-4xl mb-4">🔒</div>
+              <div className="mb-4">
+                <Lock size={48} weight="duotone" className="text-poppy-dark-purple" />
+              </div>
               <h3 className="text-xl font-poppins font-semibold text-gray-900 mb-3">
                 Secure & Private
               </h3>
