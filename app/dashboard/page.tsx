@@ -78,54 +78,54 @@ function DashboardContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
-          {/* Quick Summary Section */}
+          {/* Selected Account Info Card */}
           {selectedAccountId && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-poppins font-semibold text-gray-900">
-                Account Summary
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="card">
-                  <p className="text-sm text-gray-500 mb-2">Account Name</p>
-                  <p className="text-lg font-poppins font-semibold text-gray-900 truncate">
+            <div className="card bg-gradient-to-br from-poppy-light-purple/10 to-poppy-light-purple/5 border border-poppy-light-purple/20">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Currently Managing</p>
+                  <h2 className="text-2xl font-poppins font-bold text-gray-900 mb-2">
                     {adAccounts.find((a) => a.account_id === selectedAccountId)?.name}
-                  </p>
+                  </h2>
+                  <div className="flex gap-4">
+                    <div>
+                      <p className="text-xs text-gray-500">Currency</p>
+                      <p className="font-semibold text-poppy-dark-purple">
+                        {adAccounts.find((a) => a.account_id === selectedAccountId)?.currency}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">Status</p>
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                        adAccounts.find((a) => a.account_id === selectedAccountId)?.account_status === 1
+                          ? "bg-green-100 text-green-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}>
+                        {adAccounts.find((a) => a.account_id === selectedAccountId)?.account_status === 1
+                          ? "Active"
+                          : "Pending"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="card">
-                  <p className="text-sm text-gray-500 mb-2">Currency</p>
-                  <p className="text-lg font-poppins font-semibold text-poppy-dark-purple">
-                    {adAccounts.find((a) => a.account_id === selectedAccountId)?.currency}
-                  </p>
-                </div>
-                <div className="card">
-                  <p className="text-sm text-gray-500 mb-2">Account Status</p>
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                    adAccounts.find((a) => a.account_id === selectedAccountId)?.account_status === 1
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}>
-                    {adAccounts.find((a) => a.account_id === selectedAccountId)?.account_status === 1
-                      ? "Active"
-                      : "Pending"}
-                  </span>
-                </div>
-                <div className="card">
-                  <p className="text-sm text-gray-500 mb-2">Account ID</p>
-                  <p className="text-xs font-mono text-gray-600 truncate" title={selectedAccountId}>
-                    {selectedAccountId}
-                  </p>
-                </div>
+                <button
+                  onClick={() => setSelectedAccountId(null)}
+                  className="text-sm text-gray-500 hover:text-gray-700 font-medium"
+                >
+                  Change Account
+                </button>
               </div>
             </div>
           )}
 
-          {/* Ad Account Selection */}
-          <div>
-            <h2 className="text-xl font-poppins font-semibold text-gray-900 mb-4">
-              Your Ad Accounts
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {adAccounts.map((account) => (
+          {/* Ad Account Selection - Only show if no account selected */}
+          {!selectedAccountId && (
+            <div>
+              <h2 className="text-xl font-poppins font-semibold text-gray-900 mb-4">
+                Select an Ad Account
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {adAccounts.map((account) => (
                 <div
                   key={account.account_id}
                   onClick={() => handleSelectAccount(account.account_id)}
@@ -158,9 +158,10 @@ function DashboardContent() {
                     </p>
                   </div>
                 </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Quick Actions */}
           {selectedAccountId && (
