@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Raleway:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #fef9ff;
+  font-family: 'Raleway', sans-serif;
+  color: #333;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+}
+
+.btn-primary {
+  @apply px-6 py-3 bg-poppy-dark-purple text-white rounded-xl font-poppins font-semibold hover:bg-poppy-purple transition-colors shadow-soft;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 bg-poppy-light-purple text-white rounded-xl font-poppins font-semibold hover:bg-poppy-purple transition-colors shadow-soft;
+}
+
+.btn-outline {
+  @apply px-6 py-3 border-2 border-poppy-dark-purple text-poppy-dark-purple rounded-xl font-poppins font-semibold hover:bg-poppy-white transition-colors;
+}
+
+.card {
+  @apply bg-white rounded-xl p-6 shadow-softer hover:shadow-soft transition-shadow;
+}
+
+.modal-overlay {
+  @apply fixed inset-0 bg-black/20 flex items-center justify-center z-50;
+}
+
+.modal-content {
+  @apply bg-white rounded-2xl p-8 shadow-soft max-w-lg w-full mx-4;
+}
