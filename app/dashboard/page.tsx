@@ -9,7 +9,10 @@ export const dynamic = "force-dynamic";
 
 function DashboardContent() {
   const [adAccounts, setAdAccounts] = useState<AdAccount[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [adSets, setAdSets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [metricsLoading, setMetricsLoading] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -38,6 +41,44 @@ function DashboardContent() {
 
     fetchAdAccounts();
   }, []);
+
+  // Fetch campaigns and ad sets when account is selected
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      if (!selectedAccountId) {
+        setCampaigns([]);
+        setAdSets([]);
+        return;
+      }
+
+      setMetricsLoading(true);
+      try {
+        // Fetch campaigns for this account
+        const campaignsResponse = await fetch(
+          `/api/campaigns?adAccountId=${selectedAccountId}`
+        );
+        if (campaignsResponse.ok) {
+          const campaignsData = await campaignsResponse.json();
+          setCampaigns(campaignsData || []);
+        }
+
+        // Fetch ad sets from all campaigns
+        const adSetsResponse = await fetch(
+          `/api/adsets?accountId=${selectedAccountId}`
+        );
+        if (adSetsResponse.ok) {
+          const adSetsData = await adSetsResponse.json();
+          setAdSets(adSetsData || []);
+        }
+      } catch (error) {
+        console.error("Error fetching metrics:", error);
+      } finally {
+        setMetricsLoading(false);
+      }
+    };
+
+    fetchMetrics();
+  }, [selectedAccountId]);
 
   const handleSelectAccount = (accountId: string) => {
     setSelectedAccountId(accountId);
@@ -169,28 +210,54 @@ function DashboardContent() {
               <h2 className="text-2xl font-poppins font-semibold text-gray-900">
                 Campaign Overview
               </h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="card">
-                  <p className="text-xs text-gray-500 mb-1">Active Campaigns</p>
-                  <p className="text-3xl font-poppins font-bold text-green-600">-</p>
-                  <p className="text-xs text-gray-400 mt-1">View campaigns →</p>
+              {metricsLoading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-poppy-dark-purple"></div>
                 </div>
-                <div className="card">
-                  <p className="text-xs text-gray-500 mb-1">Paused Campaigns</p>
-                  <p className="text-3xl font-poppins font-bold text-orange-600">-</p>
-                  <p className="text-xs text-gray-400 mt-1">Resume paused →</p>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <Link
+                    href={`/dashboard/campaigns?accountId=${selectedAccountId}&filter=ACTIVE`}
+                    className="card hover:shadow-soft transition-shadow cursor-pointer"
+                  >
+                    <p className="text-xs text-gray-500 mb-1">Active Campaigns</p>
+                    <p className="text-3xl font-poppins font-bold text-green-600">
+                      {campaigns.filter((c) => c.status === "ACTIVE").length}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">View campaigns →</p>
+                  </Link>
+                  <Link
+                    href={`/dashboard/campaigns?accountId=${selectedAccountId}&filter=PAUSED`}
+                    className="card hover:shadow-soft transition-shadow cursor-pointer"
+                  >
+                    <p className="text-xs text-gray-500 mb-1">Paused Campaigns</p>
+                    <p className="text-3xl font-poppins font-bold text-orange-600">
+                      {campaigns.filter((c) => c.status === "PAUSED").length}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">Resume paused →</p>
+                  </Link>
+                  <Link
+                    href={`/dashboard/campaigns?accountId=${selectedAccountId}`}
+                    className="card hover:shadow-soft transition-shadow cursor-pointer"
+                  >
+                    <p className="text-xs text-gray-500 mb-1">Total Ad Sets</p>
+                    <p className="text-3xl font-poppins font-bold text-blue-600">
+                      {adSets.length}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">Manage ad sets →</p>
+                  </Link>
+                  <Link
+                    href={`/dashboard/campaigns?accountId=${selectedAccountId}`}
+                    className="card hover:shadow-soft transition-shadow cursor-pointer bg-poppy-light-purple/5"
+                  >
+                    <p className="text-xs text-gray-500 mb-1">Total Campaigns</p>
+                    <p className="text-3xl font-poppins font-bold text-poppy-dark-purple">
+                      {campaigns.length}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">to campaigns →</p>
+                  </Link>
                 </div>
-                <div className="card">
-                  <p className="text-xs text-gray-500 mb-1">Total Ad Sets</p>
-                  <p className="text-3xl font-poppins font-bold text-blue-600">-</p>
-                  <p className="text-xs text-gray-400 mt-1">Manage ad sets →</p>
-                </div>
-                <div className="card">
-                  <p className="text-xs text-gray-500 mb-1">Quick Link</p>
-                  <p className="text-lg font-poppins font-bold text-poppy-dark-purple">Go</p>
-                  <p className="text-xs text-gray-400 mt-1">to campaigns →</p>
-                </div>
-              </div>
+              )}
             </div>
           )}
 
