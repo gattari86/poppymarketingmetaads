@@ -30,6 +30,7 @@ export default function CreateCampaignModal({
   const [objective, setObjective] = useState(OBJECTIVES[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [specialAdCategories, setSpecialAdCategories] = useState<string[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,14 +41,21 @@ export default function CreateCampaignModal({
       if (!name.trim()) throw new Error("Campaign name is required");
       if (!objective.trim()) throw new Error("Campaign objective is required");
 
+      const campaignData: any = {
+        name: name.trim(),
+        objective,
+        status: "PAUSED",
+      };
+
+      // Add special_ad_categories if any are selected
+      if (specialAdCategories.length > 0) {
+        campaignData.special_ad_categories = specialAdCategories;
+      }
+
       const response = await fetch(`/api/campaigns?adAccountId=${accountId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          objective,
-          status: "PAUSED",
-        }),
+        body: JSON.stringify(campaignData),
       });
 
       if (!response.ok) {
@@ -108,6 +116,68 @@ export default function CreateCampaignModal({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Special Ad Categories (Optional)
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={specialAdCategories.includes("HOUSING")}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSpecialAdCategories([...specialAdCategories, "HOUSING"]);
+                    } else {
+                      setSpecialAdCategories(
+                        specialAdCategories.filter((c) => c !== "HOUSING")
+                      );
+                    }
+                  }}
+                  className="w-4 h-4 text-poppy-dark-purple rounded"
+                />
+                <span className="text-sm text-gray-700">Housing</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={specialAdCategories.includes("EMPLOYMENT")}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSpecialAdCategories([...specialAdCategories, "EMPLOYMENT"]);
+                    } else {
+                      setSpecialAdCategories(
+                        specialAdCategories.filter((c) => c !== "EMPLOYMENT")
+                      );
+                    }
+                  }}
+                  className="w-4 h-4 text-poppy-dark-purple rounded"
+                />
+                <span className="text-sm text-gray-700">Employment</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={specialAdCategories.includes("CREDIT")}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSpecialAdCategories([...specialAdCategories, "CREDIT"]);
+                    } else {
+                      setSpecialAdCategories(
+                        specialAdCategories.filter((c) => c !== "CREDIT")
+                      );
+                    }
+                  }}
+                  className="w-4 h-4 text-poppy-dark-purple rounded"
+                />
+                <span className="text-sm text-gray-700">Credit</span>
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Select if your campaign falls under regulated categories (Housing, Employment, Credit)
+            </p>
           </div>
 
           {error && (
