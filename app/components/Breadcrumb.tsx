@@ -46,7 +46,7 @@ export default function Breadcrumb() {
       "support",
     ].includes(segments[0]);
 
-    // Add Home link
+    // Add Home link (always points to landing page)
     items.push({
       label: "Home",
       href: "/",

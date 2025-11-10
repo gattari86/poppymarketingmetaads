@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Breadcrumb from "@/app/components/Breadcrumb";
+import Link from "next/link";
 
 export default function Support() {
   const [name, setName] = useState("");
@@ -45,10 +46,13 @@ export default function Support() {
   return (
     <div className="min-h-screen bg-poppy-white">
       <nav className="border-b border-gray-100 bg-white shadow-softer sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
           <a href="/" className="text-2xl font-poppins font-bold text-poppy-dark-purple">
             Poppy
           </a>
+          <Link href="/auth/signin" className="btn-primary text-sm">
+            Back to Poppy Marketing Ads Manager
+          </Link>
         </div>
       </nav>
 
