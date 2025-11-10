@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "Poppy Marketing Ads Manager",
@@ -22,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-poppy-white text-gray-800 font-raleway">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

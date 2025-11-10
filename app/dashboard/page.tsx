@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import type { AdAccount } from "@/lib/types";
 
-export default function DashboardHome() {
+export const dynamic = "force-dynamic";
+
+function DashboardContent() {
   const [adAccounts, setAdAccounts] = useState<AdAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
@@ -42,14 +45,14 @@ export default function DashboardHome() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-poppins font-bold text-gray-900 mb-2">
+      <div className="max-w-2xl">
+        <h1 className="text-4xl font-poppins font-bold text-gray-900 mb-3">
           Welcome to Poppy
         </h1>
-        <p className="text-gray-600">
-          Manage your Meta advertising campaigns with ease.
+        <p className="text-lg text-gray-600 leading-relaxed">
+          Manage your Meta advertising campaigns with ease. Select an ad account to get started.
         </p>
       </div>
 
@@ -120,11 +123,11 @@ export default function DashboardHome() {
 
           {/* Quick Actions */}
           {selectedAccountId && (
-            <div>
-              <h2 className="text-xl font-poppins font-semibold text-gray-900 mb-4">
+            <div className="pt-6 border-t border-gray-100">
+              <h2 className="text-2xl font-poppins font-semibold text-gray-900 mb-8">
                 Quick Actions
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Link
                   href={`/dashboard/campaigns?accountId=${selectedAccountId}`}
                   className="card text-center hover:shadow-soft transition-shadow"
@@ -166,5 +169,13 @@ export default function DashboardHome() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function DashboardHome() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-poppy-dark-purple"></div></div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

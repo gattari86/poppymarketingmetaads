@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect } from "react";
 
+export const dynamic = "force-dynamic";
+
 export default function DashboardLayout({
   children,
 }: {
@@ -38,8 +40,8 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-poppy-white">
       {/* Navigation */}
       <nav className="border-b border-gray-100 bg-white shadow-softer sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
             <Link href="/dashboard" className="flex items-center gap-2">
               <span className="text-2xl font-poppins font-bold text-poppy-dark-purple">
                 Poppy
@@ -88,13 +90,13 @@ export default function DashboardLayout({
       </nav>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-6 lg:px-8 py-12 md:py-16">
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 bg-gray-50 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <footer className="border-t border-gray-100 bg-gray-50 mt-24">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <p className="font-poppins font-semibold text-gray-800 mb-4">

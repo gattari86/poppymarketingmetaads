@@ -1,11 +1,14 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useState } from "react";
 import CreateRuleModal from "@/app/components/CreateRuleModal";
 
-export default function RulesPage() {
+export const dynamic = "force-dynamic";
+
+function RulesContent() {
   const searchParams = useSearchParams();
   const accountId = searchParams.get("accountId") || localStorage.getItem("selectedAdAccountId");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -22,22 +25,22 @@ export default function RulesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start gap-6 flex-col md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-poppins font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-poppins font-bold text-gray-900 mb-3">
             Automated Rules
           </h1>
-          <p className="text-gray-600">
-            Create rules to automatically pause ad sets based on spending thresholds
+          <p className="text-lg text-gray-600">
+            Create rules to automatically manage your ad spend and performance
           </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="btn-primary"
+          className="btn-primary whitespace-nowrap"
         >
-          + Create Rule
+          + New Rule
         </button>
       </div>
 
@@ -89,5 +92,13 @@ export default function RulesPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function RulesPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-poppy-dark-purple"></div></div>}>
+      <RulesContent />
+    </Suspense>
   );
 }

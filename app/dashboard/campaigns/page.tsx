@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 import type { Campaign } from "@/lib/types";
 import CreateCampaignModal from "@/app/components/CreateCampaignModal";
 import CampaignAdSets from "@/app/components/CampaignAdSets";
 
-export default function CampaignsPage() {
+export const dynamic = "force-dynamic";
+
+function CampaignsContent() {
   const searchParams = useSearchParams();
   const accountId = searchParams.get("accountId") || localStorage.getItem("selectedAdAccountId");
 
@@ -54,22 +57,22 @@ export default function CampaignsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start gap-6 flex-col md:flex-row md:items-center">
         <div>
-          <h1 className="text-3xl font-poppins font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl font-poppins font-bold text-gray-900 mb-3">
             Campaigns
           </h1>
-          <p className="text-gray-600">
-            Create and manage your ad campaigns
+          <p className="text-lg text-gray-600">
+            Create and manage your ad campaigns efficiently
           </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="btn-primary"
+          className="btn-primary whitespace-nowrap"
         >
-          + Create Campaign
+          + New Campaign
         </button>
       </div>
 
@@ -155,5 +158,13 @@ export default function CampaignsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function CampaignsPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-poppy-dark-purple"></div></div>}>
+      <CampaignsContent />
+    </Suspense>
   );
 }
