@@ -29,31 +29,53 @@ export default function CreateAdModal({
     setError("");
 
     try {
-      const creative: Record<string, unknown> = {
+      if (!name.trim()) throw new Error("Ad name is required");
+
+      if (useExistingCreative) {
+        if (!creativeId.trim()) throw new Error("Please enter a creative ID");
+      } else {
+        if (!title.trim()) throw new Error("Ad title is required");
+        if (!body.trim()) throw new Error("Ad body text is required");
+      }
+
+      const requestBody: Record<string, unknown> = {
+        name: name.trim(),
         adset_id: adSetId,
       };
 
       if (useExistingCreative) {
-        if (!creativeId) throw new Error("Please enter a creative ID");
-        creative.creative_id = creativeId;
+        // Use existing creative - only pass creative_id
+        requestBody.creative = {
+          creative_id: creativeId.trim(),
+        };
       } else {
-        creative.title = title;
-        creative.body = body;
-        if (imageUrl) creative.image_url = imageUrl;
+        // For new creative, pass as separate object
+        // Note: Creating inline creatives requires the ads API to handle it properly
+        requestBody.creative = {
+          title: title.trim(),
+          body: body.trim(),
+        };
+        if (imageUrl.trim()) {
+          (requestBody.creative as Record<string, unknown>).image_url = imageUrl.trim();
+        }
       }
 
       const response = await fetch(`/api/ads?adSetId=${adSetId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          adset_id: adSetId,
-          creative,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create ad");
+        let errorMessage = "Failed to create ad";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch {
+          // If response isn't JSON, use the status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -88,6 +110,12 @@ export default function CreateAdModal({
           </div>
 
           <div className="space-y-3">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <p className="text-xs text-blue-800">
+                <strong>Note:</strong> Creatives must be created in Meta Ads Manager first. Enter the creative ID from your ad account.
+              </p>
+            </div>
+
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
@@ -96,18 +124,23 @@ export default function CreateAdModal({
                 className="w-4 h-4"
               />
               <span className="text-sm font-medium text-gray-700">
-                Use Existing Creative
+                Use Existing Creative (Recommended)
               </span>
             </label>
 
             {useExistingCreative && (
-              <input
-                type="text"
-                value={creativeId}
-                onChange={(e) => setCreativeId(e.target.value)}
-                placeholder="Enter creative ID"
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple ml-6"
-              />
+              <div className="ml-6 space-y-2">
+                <input
+                  type="text"
+                  value={creativeId}
+                  onChange={(e) => setCreativeId(e.target.value)}
+                  placeholder="Enter creative ID (e.g., 123456789)"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                />
+                <p className="text-xs text-gray-500">
+                  Find creative IDs in Meta Ads Manager under Assets → Creatives
+                </p>
+              </div>
             )}
 
             <label className="flex items-center gap-2 cursor-pointer mt-4">
@@ -118,12 +151,16 @@ export default function CreateAdModal({
                 className="w-4 h-4"
               />
               <span className="text-sm font-medium text-gray-700">
-                Create New Creative
+                Create New Creative (Alternative)
               </span>
             </label>
 
             {!useExistingCreative && (
-              <div className="space-y-3 ml-6">
+              <div className="space-y-3 ml-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <p className="text-xs text-amber-800 mb-3">
+                  <strong>⚠️ This requires additional setup:</strong> After filling in details below, creatives will need to be uploaded to Meta Ads Manager separately before ads can use them.
+                </p>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Title

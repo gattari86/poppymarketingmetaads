@@ -37,18 +37,29 @@ export default function CreateCampaignModal({
     setError("");
 
     try {
+      if (!name.trim()) throw new Error("Campaign name is required");
+      if (!objective.trim()) throw new Error("Campaign objective is required");
+
       const response = await fetch(`/api/campaigns?adAccountId=${accountId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
+          name: name.trim(),
           objective,
           status: "PAUSED",
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create campaign");
+        let errorMessage = "Failed to create campaign";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch {
+          // If response isn't JSON, use the status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
