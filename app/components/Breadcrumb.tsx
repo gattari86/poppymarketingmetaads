@@ -17,6 +17,10 @@ const pathSegmentLabels: Record<string, string> = {
   "ad-accounts": "Ad Accounts",
   adsets: "Ad Sets",
   ads: "Ads",
+  "privacy-policy": "Privacy Policy",
+  terms: "Terms of Service",
+  "data-deletion": "Data Deletion",
+  support: "Support",
 };
 
 export default function Breadcrumb() {
@@ -29,34 +33,85 @@ export default function Breadcrumb() {
     }
 
     const segments = pathname.split("/").filter(Boolean);
-    const items: BreadcrumbItem[] = [
-      {
-        label: "Home",
-        href: "/",
-      },
-    ];
 
-    let currentPath = "";
+    // Create breadcrumb items based on page type
+    let items: BreadcrumbItem[] = [];
 
-    segments.forEach((segment, index) => {
-      currentPath += `/${segment}`;
+    // Check if it's a dashboard page or support page
+    const isDashboardPage = segments[0] === "dashboard";
+    const isSupportPage = [
+      "privacy-policy",
+      "terms",
+      "data-deletion",
+      "support",
+    ].includes(segments[0]);
 
-      // Get label from map or capitalize segment
+    // Add Home link
+    items.push({
+      label: "Home",
+      href: "/",
+    });
+
+    // For dashboard pages
+    if (isDashboardPage) {
+      items.push({
+        label: "Dashboard",
+        href: "/dashboard",
+      });
+
+      // Add nested pages (campaigns, rules, etc.)
+      if (segments.length > 1) {
+        let currentPath = "/dashboard";
+        for (let i = 1; i < segments.length; i++) {
+          currentPath += `/${segments[i]}`;
+          const label =
+            pathSegmentLabels[segments[i]] ||
+            segments[i]
+              .split("-")
+              .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(" ");
+
+          const isLast = i === segments.length - 1;
+          items.push({
+            label,
+            href: isLast ? undefined : currentPath,
+          });
+        }
+      }
+    }
+    // For support pages
+    else if (isSupportPage) {
       const label =
-        pathSegmentLabels[segment] ||
-        segment
+        pathSegmentLabels[segments[0]] ||
+        segments[0]
           .split("-")
           .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
           .join(" ");
 
-      // Don't add link for last segment (current page)
-      const isLast = index === segments.length - 1;
-
       items.push({
         label,
-        href: isLast ? undefined : currentPath,
       });
-    });
+    }
+    // For other pages
+    else {
+      let currentPath = "";
+      segments.forEach((segment, index) => {
+        currentPath += `/${segment}`;
+
+        const label =
+          pathSegmentLabels[segment] ||
+          segment
+            .split("-")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+
+        const isLast = index === segments.length - 1;
+        items.push({
+          label,
+          href: isLast ? undefined : currentPath,
+        });
+      });
+    }
 
     return items;
   }, [pathname]);

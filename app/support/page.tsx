@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Breadcrumb from "@/app/components/Breadcrumb";
 
 export default function Support() {
   const [name, setName] = useState("");
@@ -50,6 +51,8 @@ export default function Support() {
           </a>
         </div>
       </nav>
+
+      <Breadcrumb />
 
       <main className="max-w-2xl mx-auto px-4 py-12">
         <h1 className="text-4xl font-poppins font-bold text-gray-900 mb-2">
