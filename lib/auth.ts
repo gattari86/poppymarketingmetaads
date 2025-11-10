@@ -59,6 +59,6 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
     error: "/auth/error",
   },
-  secret: process.env.NEXTAUTH_SECRET || (process.env.NODE_ENV === "production" ? undefined : "dev-secret-key-for-testing-only"),
+  secret: process.env.NEXTAUTH_SECRET || "fallback-secure-key-change-me-in-production",
   debug: process.env.NODE_ENV === "development",
 };
