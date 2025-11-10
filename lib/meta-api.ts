@@ -166,8 +166,11 @@ export async function createAdSet(
       daily_budget: adSetData.daily_budget,
       optimization_goal: adSetData.optimization_goal,
       billing_event: adSetData.billing_event,
+      campaign_id: adSetData.campaign_id,
     });
 
+    // Note: Campaign must be in ACTIVE status to create ad sets
+    // If you get "Object with ID does not exist" error, activate the campaign first
     const response = await metaApi.post(`/${campaignId}/adsets`, adSetData, {
       params: {
         access_token: accessToken,
@@ -176,6 +179,7 @@ export async function createAdSet(
     return response.data;
   } catch (error) {
     console.error("Error creating ad set:", error);
+    console.error("Make sure the campaign is in ACTIVE status before creating ad sets");
     throw error;
   }
 }
@@ -221,6 +225,28 @@ export async function createAd(
     return response.data;
   } catch (error) {
     console.error("Error creating ad:", error);
+    throw error;
+  }
+}
+
+export async function updateCampaignStatus(
+  campaignId: string,
+  status: "ACTIVE" | "PAUSED" | "DELETED" | "ARCHIVED",
+  accessToken: string
+) {
+  try {
+    const response = await metaApi.post(
+      `/${campaignId}`,
+      { status },
+      {
+        params: {
+          access_token: accessToken,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating campaign status:", error);
     throw error;
   }
 }
