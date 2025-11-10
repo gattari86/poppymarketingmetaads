@@ -18,6 +18,7 @@ function CampaignsContent() {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | "ACTIVE" | "PAUSED">("all");
 
   useEffect(() => {
     const fetchCampaigns = async () => {
@@ -44,6 +45,15 @@ function CampaignsContent() {
     setCampaigns([newCampaign, ...campaigns]);
     setShowCreateModal(false);
   };
+
+  // Filter campaigns based on status
+  const filteredCampaigns = campaigns.filter((campaign) => {
+    if (statusFilter === "all") return true;
+    return campaign.status === statusFilter;
+  });
+
+  const activeCampaigns = campaigns.filter((c) => c.status === "ACTIVE").length;
+  const pausedCampaigns = campaigns.filter((c) => c.status === "PAUSED").length;
 
   if (!accountId) {
     return (
@@ -76,6 +86,67 @@ function CampaignsContent() {
         </button>
       </div>
 
+      {/* Campaign Stats and Filters */}
+      {campaigns.length > 0 && (
+        <div className="space-y-4">
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="card">
+              <p className="text-sm text-gray-500 mb-1">Total Campaigns</p>
+              <p className="text-3xl font-poppins font-bold text-poppy-dark-purple">
+                {campaigns.length}
+              </p>
+            </div>
+            <div className="card">
+              <p className="text-sm text-gray-500 mb-1">Active</p>
+              <p className="text-3xl font-poppins font-bold text-green-600">
+                {activeCampaigns}
+              </p>
+            </div>
+            <div className="card">
+              <p className="text-sm text-gray-500 mb-1">Paused</p>
+              <p className="text-3xl font-poppins font-bold text-orange-600">
+                {pausedCampaigns}
+              </p>
+            </div>
+          </div>
+
+          {/* Filters */}
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setStatusFilter("all")}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                statusFilter === "all"
+                  ? "bg-poppy-dark-purple text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              All ({campaigns.length})
+            </button>
+            <button
+              onClick={() => setStatusFilter("ACTIVE")}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                statusFilter === "ACTIVE"
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Active ({activeCampaigns})
+            </button>
+            <button
+              onClick={() => setStatusFilter("PAUSED")}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                statusFilter === "PAUSED"
+                  ? "bg-orange-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              Paused ({pausedCampaigns})
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Modal */}
       {showCreateModal && (
         <CreateCampaignModal
@@ -107,7 +178,14 @@ function CampaignsContent() {
         </div>
       ) : (
         <div className="space-y-4">
-          {campaigns.map((campaign) => (
+          {filteredCampaigns.length === 0 ? (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-8 text-center">
+              <p className="text-gray-600">
+                No {statusFilter !== "all" ? statusFilter.toLowerCase() : ""} campaigns found.
+              </p>
+            </div>
+          ) : (
+            filteredCampaigns.map((campaign) => (
             <div key={campaign.id}>
               <button
                 onClick={() =>
@@ -154,7 +232,8 @@ function CampaignsContent() {
                 <CampaignAdSets campaign={campaign} />
               )}
             </div>
-          ))}
+            ))
+          )}
         </div>
       )}
     </div>

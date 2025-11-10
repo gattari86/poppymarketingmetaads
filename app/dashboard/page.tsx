@@ -78,6 +78,47 @@ function DashboardContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6">
+          {/* Quick Summary Section */}
+          {selectedAccountId && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-poppins font-semibold text-gray-900">
+                Account Summary
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="card">
+                  <p className="text-sm text-gray-500 mb-2">Account Name</p>
+                  <p className="text-lg font-poppins font-semibold text-gray-900 truncate">
+                    {adAccounts.find((a) => a.account_id === selectedAccountId)?.name}
+                  </p>
+                </div>
+                <div className="card">
+                  <p className="text-sm text-gray-500 mb-2">Currency</p>
+                  <p className="text-lg font-poppins font-semibold text-poppy-dark-purple">
+                    {adAccounts.find((a) => a.account_id === selectedAccountId)?.currency}
+                  </p>
+                </div>
+                <div className="card">
+                  <p className="text-sm text-gray-500 mb-2">Account Status</p>
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                    adAccounts.find((a) => a.account_id === selectedAccountId)?.account_status === 1
+                      ? "bg-green-100 text-green-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}>
+                    {adAccounts.find((a) => a.account_id === selectedAccountId)?.account_status === 1
+                      ? "Active"
+                      : "Pending"}
+                  </span>
+                </div>
+                <div className="card">
+                  <p className="text-sm text-gray-500 mb-2">Account ID</p>
+                  <p className="text-xs font-mono text-gray-600 truncate" title={selectedAccountId}>
+                    {selectedAccountId}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Ad Account Selection */}
           <div>
             <h2 className="text-xl font-poppins font-semibold text-gray-900 mb-4">
