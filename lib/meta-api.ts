@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_VERSION = process.env.META_GRAPH_VERSION || "v20.0";
+const API_VERSION = process.env.META_GRAPH_VERSION || "v24.0";
 const GRAPH_API_URL = "https://graph.facebook.com";
 
 export const metaApi = axios.create({
@@ -84,21 +84,38 @@ export async function createCampaign(
     objective: string;
     status: string;
     special_ad_categories?: string[];
+    daily_budget?: number;
   },
   accessToken: string
 ) {
   try {
     const formattedId = formatAdAccountId(adAccountId);
 
-    // Build the campaign data - always include special_ad_categories as Meta requires it
+    // Meta API v24 requires specific parameters for campaign creation
+    // Reference: https://developers.facebook.com/docs/marketing-api/reference/ad-campaign
     const campaignData: Record<string, any> = {
       name: data.name,
       objective: data.objective,
       status: data.status,
-      // Meta requires special_ad_categories - send empty array if none selected
+      // REQUIRED: buying_type - specifies how to buy inventory (AUCTION is standard)
+      buying_type: "AUCTION",
+      // REQUIRED: Must specify at least one budget. Using daily_budget with default of $5/day
+      daily_budget: (data.daily_budget || 500) * 100, // Convert to cents (Meta API expects cents)
+      // Meta requires special_ad_categories - send as JSON string or empty array
       // Empty array means "no special categories apply to this campaign"
-      special_ad_categories: data.special_ad_categories || [],
+      special_ad_categories: data.special_ad_categories && data.special_ad_categories.length > 0
+        ? data.special_ad_categories
+        : [],
     };
+
+    console.log("Creating campaign with v24 parameters:", {
+      adAccountId: formattedId,
+      name: campaignData.name,
+      objective: campaignData.objective,
+      buying_type: campaignData.buying_type,
+      daily_budget: campaignData.daily_budget,
+      status: campaignData.status,
+    });
 
     const response = await metaApi.post(`/${formattedId}/campaigns`, campaignData, {
       params: {

@@ -27,6 +27,7 @@ export default function CreateCampaignModal({
 }: CreateCampaignModalProps) {
   const [name, setName] = useState("");
   const [objective, setObjective] = useState(OBJECTIVES[0]);
+  const [dailyBudget, setDailyBudget] = useState("5"); // Default $5/day
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [specialAdCategories, setSpecialAdCategories] = useState<string[]>([]);
@@ -39,11 +40,16 @@ export default function CreateCampaignModal({
     try {
       if (!name.trim()) throw new Error("Campaign name is required");
       if (!objective.trim()) throw new Error("Campaign objective is required");
+      if (!dailyBudget || parseFloat(dailyBudget) <= 0) {
+        throw new Error("Daily budget must be greater than 0");
+      }
 
       const campaignData: any = {
         name: name.trim(),
         objective,
         status: "PAUSED",
+        // Daily budget in dollars (will be converted to cents by API)
+        daily_budget: parseFloat(dailyBudget),
         // Always include special_ad_categories - Meta requires it
         // If empty array, it means "none of the special categories apply"
         special_ad_categories: specialAdCategories.length > 0 ? specialAdCategories : [],
@@ -113,6 +119,29 @@ export default function CreateCampaignModal({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Daily Budget (USD)
+            </label>
+            <div className="flex items-center">
+              <span className="text-gray-700 font-medium mr-2">$</span>
+              <input
+                type="number"
+                value={dailyBudget}
+                onChange={(e) => setDailyBudget(e.target.value)}
+                placeholder="5.00"
+                min="0.01"
+                step="0.01"
+                required
+                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+              />
+              <span className="text-gray-500 text-sm ml-2">/day</span>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Minimum daily budget recommended: $1.00
+            </p>
           </div>
 
           <div>
