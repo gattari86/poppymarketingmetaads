@@ -83,12 +83,26 @@ export async function createCampaign(
     name: string;
     objective: string;
     status: string;
+    special_ad_categories?: string[];
   },
   accessToken: string
 ) {
   try {
     const formattedId = formatAdAccountId(adAccountId);
-    const response = await metaApi.post(`/${formattedId}/campaigns`, data, {
+
+    // Build the campaign data - only include fields that Meta accepts
+    const campaignData: Record<string, any> = {
+      name: data.name,
+      objective: data.objective,
+      status: data.status,
+    };
+
+    // Only include special_ad_categories if provided and not empty
+    if (data.special_ad_categories && data.special_ad_categories.length > 0) {
+      campaignData.special_ad_categories = data.special_ad_categories;
+    }
+
+    const response = await metaApi.post(`/${formattedId}/campaigns`, campaignData, {
       params: {
         access_token: accessToken,
       },
