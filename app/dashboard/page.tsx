@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import type { AdAccount } from "@/lib/types";
 
 export default function DashboardHome() {
-  const { data: session } = useSession();
   const [adAccounts, setAdAccounts] = useState<AdAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
@@ -21,7 +19,7 @@ export default function DashboardHome() {
           if (accounts.length > 0) {
             // Try to get previously selected account from localStorage
             const savedAccountId = localStorage.getItem("selectedAdAccountId");
-            if (savedAccountId && accounts.some((a) => a.account_id === savedAccountId)) {
+            if (savedAccountId && accounts.some((a: AdAccount) => a.account_id === savedAccountId)) {
               setSelectedAccountId(savedAccountId);
             } else {
               setSelectedAccountId(accounts[0].account_id);

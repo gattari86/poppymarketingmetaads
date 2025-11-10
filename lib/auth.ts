@@ -1,4 +1,5 @@
-import { type NextAuthOptions } from "next-auth";
+import { type NextAuthOptions, type Session } from "next-auth";
+import { type JWT } from "next-auth/jwt";
 import FacebookProvider from "next-auth/providers/facebook";
 
 export const authOptions: NextAuthOptions = {
@@ -15,16 +16,16 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account }: { token: JWT; account: any }) {
       if (account) {
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
       }
       return token;
     },
-    async session({ session, token }) {
-      session.accessToken = token.accessToken as string;
-      session.refreshToken = token.refreshToken as string;
+    async session({ session, token }: { session: Session; token: JWT }) {
+      (session as any).accessToken = token.accessToken as string;
+      (session as any).refreshToken = token.refreshToken as string;
       return session;
     },
   },
