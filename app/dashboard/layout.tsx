@@ -1,9 +1,11 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useEffect } from "react";
+import AppHeader from "@/app/components/AppHeader";
+import Breadcrumb from "@/app/components/Breadcrumb";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +14,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
@@ -37,60 +39,15 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-poppy-white">
-      {/* Navigation */}
-      <nav className="border-b border-gray-100 bg-white shadow-softer sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <span className="text-2xl font-poppins font-bold text-poppy-dark-purple">
-                Poppy
-              </span>
-            </Link>
+    <div className="min-h-screen bg-poppy-white flex flex-col">
+      {/* Header */}
+      <AppHeader />
 
-            <div className="flex items-center gap-6">
-              <nav className="hidden md:flex gap-8">
-                <Link
-                  href="/dashboard"
-                  className="text-gray-600 hover:text-poppy-dark-purple transition-colors text-sm font-medium"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/dashboard/campaigns"
-                  className="text-gray-600 hover:text-poppy-dark-purple transition-colors text-sm font-medium"
-                >
-                  Campaigns
-                </Link>
-                <Link
-                  href="/dashboard/rules"
-                  className="text-gray-600 hover:text-poppy-dark-purple transition-colors text-sm font-medium"
-                >
-                  Rules
-                </Link>
-              </nav>
-
-              <div className="flex items-center gap-4">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium text-gray-800">
-                    {session?.user?.name || "User"}
-                  </p>
-                  <p className="text-xs text-gray-500">Meta Business</p>
-                </div>
-                <button
-                  onClick={() => signOut({ callbackUrl: "/auth/signin" })}
-                  className="px-4 py-2 text-sm text-poppy-dark-purple hover:bg-poppy-light-purple/20 rounded-lg transition-colors font-medium"
-                >
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Breadcrumb */}
+      <Breadcrumb />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 lg:px-8 py-12 md:py-16">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 lg:px-8 py-12 md:py-16">
         {children}
       </main>
 
