@@ -45,12 +45,10 @@ export default function CreateCampaignModal({
         name: name.trim(),
         objective,
         status: "PAUSED",
+        // Always include special_ad_categories - Meta requires it
+        // If empty array, it means "none of the special categories apply"
+        special_ad_categories: specialAdCategories.length > 0 ? specialAdCategories : [],
       };
-
-      // Add special_ad_categories if any are selected
-      if (specialAdCategories.length > 0) {
-        campaignData.special_ad_categories = specialAdCategories;
-      }
 
       const response = await fetch(`/api/campaigns?adAccountId=${accountId}`, {
         method: "POST",
