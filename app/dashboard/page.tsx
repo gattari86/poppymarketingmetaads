@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Suspense } from "react";
 import Link from "next/link";
 import type { AdAccount } from "@/lib/types";
+import { ChartBar, Gear, TrendUp } from "@phosphor-icons/react";
 
 export const dynamic = "force-dynamic";
 
@@ -251,7 +252,9 @@ function DashboardContent() {
                   href={`/dashboard/campaigns?accountId=${selectedAccountId}`}
                   className="card text-center hover:shadow-soft transition-shadow"
                 >
-                  <div className="text-3xl mb-3 text-poppy-dark-purple">📊</div>
+                  <div className="mb-3 flex justify-center">
+                    <ChartBar size={40} weight="duotone" className="text-poppy-dark-purple" />
+                  </div>
                   <h3 className="font-poppins font-semibold text-gray-900 mb-2">
                     Campaigns
                   </h3>
@@ -264,7 +267,9 @@ function DashboardContent() {
                   href={`/dashboard/rules?accountId=${selectedAccountId}`}
                   className="card text-center hover:shadow-soft transition-shadow"
                 >
-                  <div className="text-3xl mb-3">⚙️</div>
+                  <div className="mb-3 flex justify-center">
+                    <Gear size={40} weight="duotone" className="text-poppy-dark-purple" />
+                  </div>
                   <h3 className="font-poppins font-semibold text-gray-900 mb-2">
                     Automated Rules
                   </h3>
@@ -274,7 +279,9 @@ function DashboardContent() {
                 </Link>
 
                 <div className="card text-center opacity-50">
-                  <div className="text-3xl mb-3">📈</div>
+                  <div className="mb-3 flex justify-center">
+                    <TrendUp size={40} weight="duotone" className="text-gray-700" />
+                  </div>
                   <h3 className="font-poppins font-semibold text-gray-900 mb-2">
                     Analytics
                   </h3>
