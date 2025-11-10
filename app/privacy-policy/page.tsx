@@ -83,6 +83,25 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="text-2xl font-poppins font-semibold text-gray-900 mb-3">
+              Service Fees & Pricing
+            </h2>
+            <p>
+              Poppy Marketing Ads Manager is offered as a service to assist you in managing your Meta advertising campaigns. The cost of using this Service is determined by the agreement between you and Poppy Marketing & Consulting. You are responsible for paying any service fees as specified in your service agreement with us.
+            </p>
+            <p className="mt-4">
+              Please note that our Service fee is separate from and in addition to your Meta advertising spend. You are solely responsible for all costs incurred through your Meta ad accounts, including ad spend, campaign budgets, and any fees imposed by Meta. For specific information about pricing and service fees, please contact us at{" "}
+              <a
+                href="mailto:support@poppymarketingandconsulting.com"
+                className="text-poppy-dark-purple hover:underline"
+              >
+                support@poppymarketingandconsulting.com
+              </a>
+              .
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-poppins font-semibold text-gray-900 mb-3">
               Data We Do Not Store Permanently
             </h2>
             <p>

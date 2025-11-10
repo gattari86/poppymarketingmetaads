@@ -9,16 +9,15 @@ interface CreateCampaignModalProps {
   onSuccess: (campaign: Campaign) => void;
 }
 
+// Meta ODAX (Outcome-Driven Ad Experiences) objectives - 2025
+// These are the only valid campaign objectives for creating new campaigns
 const OBJECTIVES = [
-  "LINK_CLICKS",
-  "PAGE_LIKES",
-  "POST_ENGAGEMENT",
-  "VIDEO_VIEWS",
-  "REACH",
-  "IMPRESSIONS",
-  "LEAD_GENERATION",
-  "MESSAGES",
-  "CONVERSIONS",
+  "OUTCOME_SALES",
+  "OUTCOME_LEADS",
+  "OUTCOME_TRAFFIC",
+  "OUTCOME_AWARENESS",
+  "OUTCOME_ENGAGEMENT",
+  "OUTCOME_APP_PROMOTION",
 ];
 
 export default function CreateCampaignModal({

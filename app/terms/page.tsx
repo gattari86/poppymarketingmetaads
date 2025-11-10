@@ -191,7 +191,29 @@ export default function Terms() {
 
           <section>
             <h2 className="text-2xl font-poppins font-semibold text-gray-900 mb-3">
-              11. Contact Us
+              11. Pricing & Costs
+            </h2>
+            <p>
+              Poppy Marketing Ads Manager is offered as a service to assist you in managing your Meta advertising campaigns. The cost of using this Service is determined by the agreement between you and Poppy Marketing & Consulting. You are responsible for paying any fees as specified in your service agreement with Poppy Marketing & Consulting.
+            </p>
+            <p className="mt-4">
+              The Service does not include the cost of your Meta advertising spend itself. You are solely responsible for all ad spend costs incurred through your Meta ad accounts. Our Service fee is separate from and in addition to any advertising budgets you allocate to your campaigns.
+            </p>
+            <p className="mt-4">
+              For specific information about pricing, including Service fees, renewal terms, or payment details, please refer to your separate service agreement with Poppy Marketing & Consulting or contact our sales team at{" "}
+              <a
+                href="mailto:support@poppymarketingandconsulting.com"
+                className="text-poppy-dark-purple hover:underline"
+              >
+                support@poppymarketingandconsulting.com
+              </a>
+              .
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-poppins font-semibold text-gray-900 mb-3">
+              12. Contact Us
             </h2>
             <p>
               If you have questions about these Terms of Service, please contact us at:{" "}
