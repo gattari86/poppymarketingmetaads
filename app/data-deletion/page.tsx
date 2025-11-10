@@ -2,28 +2,40 @@
 
 import { useState } from "react";
 
+const FORMSPREE_ID = "mzzybzwr";
+
 export default function DataDeletion() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
 
     try {
-      const response = await fetch("/api/data-deletion", {
+      const response = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, requestedAt: new Date().toISOString() }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          message: `Data Deletion Request\n\nEmail: ${email}\nRequested at: ${new Date().toISOString()}\n\nThis user has requested deletion of their personal data from the Poppy Marketing Ads Manager system.`,
+        }),
       });
 
       if (response.ok) {
         setSubmitted(true);
         setEmail("");
+      } else {
+        setError("Failed to submit request. Please try again or contact support.");
       }
     } catch (error) {
       console.error("Error submitting request:", error);
+      setError("An error occurred. Please try again or email support@poppymarketingandconsulting.com");
     } finally {
       setLoading(false);
     }
@@ -64,7 +76,7 @@ export default function DataDeletion() {
                 Request Submitted Successfully
               </h2>
               <p className="text-green-700 mb-4">
-                We have received your data deletion request and logged it in our system.
+                We have received your data deletion request and sent it to our support team.
               </p>
               <p className="text-sm text-green-600 mb-4">
                 <strong>Next steps:</strong> Please check your email for a verification message. We will contact you within 2-5 business days to confirm your identity before proceeding with deletion. Your data will be permanently deleted within 30 days of verification.
@@ -91,6 +103,12 @@ export default function DataDeletion() {
                   This must be the email associated with your Poppy account
                 </p>
               </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+              )}
 
               <button
                 type="submit"
