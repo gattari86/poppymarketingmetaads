@@ -7,6 +7,15 @@ export const metaApi = axios.create({
   baseURL: `${GRAPH_API_URL}/${API_VERSION}`,
 });
 
+// Utility function to format ad account ID with 'act_' prefix if needed
+export function formatAdAccountId(accountId: string): string {
+  if (!accountId) return accountId;
+  // If it already has the act_ prefix, return as is
+  if (accountId.startsWith("act_")) return accountId;
+  // Otherwise, add the prefix
+  return `act_${accountId}`;
+}
+
 export async function getAdAccounts(accessToken: string) {
   try {
     const response = await metaApi.get("/me/adaccounts", {
@@ -24,7 +33,8 @@ export async function getAdAccounts(accessToken: string) {
 
 export async function getCampaigns(adAccountId: string, accessToken: string) {
   try {
-    const response = await metaApi.get(`/${adAccountId}/campaigns`, {
+    const formattedId = formatAdAccountId(adAccountId);
+    const response = await metaApi.get(`/${formattedId}/campaigns`, {
       params: {
         access_token: accessToken,
         fields: "id,name,status,objective,created_time,updated_time,daily_budget,lifetime_budget",
@@ -77,7 +87,8 @@ export async function createCampaign(
   accessToken: string
 ) {
   try {
-    const response = await metaApi.post(`/${adAccountId}/campaigns`, data, {
+    const formattedId = formatAdAccountId(adAccountId);
+    const response = await metaApi.post(`/${formattedId}/campaigns`, data, {
       params: {
         access_token: accessToken,
       },
@@ -150,8 +161,9 @@ export async function createAutomatedRule(
   accessToken: string
 ) {
   try {
+    const formattedId = formatAdAccountId(adAccountId);
     const response = await metaApi.post(
-      `/${adAccountId}/adrules_library`,
+      `/${formattedId}/adrules_library`,
       data,
       {
         params: {
