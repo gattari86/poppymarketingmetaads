@@ -49,8 +49,13 @@ export default function DataDeletion() {
             We take your privacy seriously. You have the right to request deletion of your personal data from our systems. This form provides an easy way to submit your data deletion request.
           </p>
           <p className="text-gray-700 mb-6">
-            Submitting a request below will initiate our data deletion process. We will process your request within 30 days and confirm completion via email.
+            Submitting your email below will initiate our data deletion process. We will contact you at your provided email address within 2-5 business days to verify your identity and confirm the deletion request before proceeding.
           </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <p className="text-sm text-blue-900">
+              <strong>📧 Important:</strong> You must be able to access the email address you provide, as we will send a verification message to confirm your identity before deleting your data.
+            </p>
+          </div>
 
           {submitted ? (
             <div className="p-6 bg-green-50 border border-green-200 rounded-lg text-center">
@@ -59,10 +64,13 @@ export default function DataDeletion() {
                 Request Submitted Successfully
               </h2>
               <p className="text-green-700 mb-4">
-                We have received your data deletion request. A confirmation email will be sent to verify your identity.
+                We have received your data deletion request and logged it in our system.
               </p>
               <p className="text-sm text-green-600 mb-4">
-                Processing will begin within 2-5 business days. Your data will be permanently deleted within 30 days of verification.
+                <strong>Next steps:</strong> Please check your email for a verification message. We will contact you within 2-5 business days to confirm your identity before proceeding with deletion. Your data will be permanently deleted within 30 days of verification.
+              </p>
+              <p className="text-xs text-green-500 mt-4">
+                If you don't receive an email within 24 hours, please contact us at support@poppymarketingandconsulting.com
               </p>
             </div>
           ) : (
