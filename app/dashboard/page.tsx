@@ -163,6 +163,37 @@ function DashboardContent() {
             </div>
           )}
 
+          {/* Key Metrics Overview */}
+          {selectedAccountId && (
+            <div className="space-y-4">
+              <h2 className="text-2xl font-poppins font-semibold text-gray-900">
+                Campaign Overview
+              </h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="card">
+                  <p className="text-xs text-gray-500 mb-1">Active Campaigns</p>
+                  <p className="text-3xl font-poppins font-bold text-green-600">-</p>
+                  <p className="text-xs text-gray-400 mt-1">View campaigns →</p>
+                </div>
+                <div className="card">
+                  <p className="text-xs text-gray-500 mb-1">Paused Campaigns</p>
+                  <p className="text-3xl font-poppins font-bold text-orange-600">-</p>
+                  <p className="text-xs text-gray-400 mt-1">Resume paused →</p>
+                </div>
+                <div className="card">
+                  <p className="text-xs text-gray-500 mb-1">Total Ad Sets</p>
+                  <p className="text-3xl font-poppins font-bold text-blue-600">-</p>
+                  <p className="text-xs text-gray-400 mt-1">Manage ad sets →</p>
+                </div>
+                <div className="card">
+                  <p className="text-xs text-gray-500 mb-1">Quick Link</p>
+                  <p className="text-lg font-poppins font-bold text-poppy-dark-purple">Go</p>
+                  <p className="text-xs text-gray-400 mt-1">to campaigns →</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Quick Actions */}
           {selectedAccountId && (
             <div className="pt-6 border-t border-gray-100">
