@@ -8,8 +8,9 @@ export default function Terms() {
     <div className="min-h-screen bg-poppy-white">
       <nav className="border-b border-gray-100 bg-white shadow-softer sticky top-0 z-40">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <a href="/" className="text-2xl font-poppins font-bold text-poppy-dark-purple">
-            Poppy
+          <a href="/" className="flex items-center gap-2 text-2xl font-poppins font-bold text-poppy-dark-purple">
+            <img src="/logo.png" alt="Poppy Logo" className="w-8 h-8" />
+            <span>Poppy</span>
           </a>
           <Link href="/auth/signin" className="btn-primary text-sm">
             Back to Poppy Marketing Ads Manager

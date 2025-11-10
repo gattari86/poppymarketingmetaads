@@ -20,9 +20,7 @@ export default function AppHeader() {
           href="/dashboard"
           className="flex items-center gap-2 text-2xl font-poppins font-bold text-poppy-dark-purple hover:text-poppy-purple transition-colors"
         >
-          <span className="w-8 h-8 bg-gradient-to-br from-poppy-light-purple to-poppy-dark-purple rounded-lg flex items-center justify-center text-white text-sm font-bold">
-            P
-          </span>
+          <img src="/logo.png" alt="Poppy Logo" className="w-8 h-8" />
           <span>Poppy</span>
         </Link>
 
