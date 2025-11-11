@@ -539,7 +539,12 @@ export async function createAdCreative(
           message: data.message,
           ...(data.headline && { name: data.headline }),
           ...(data.call_to_action_type && {
-            call_to_action_type: data.call_to_action_type,
+            call_to_action: {
+              type: data.call_to_action_type,
+              value: {
+                link: normalizedLink,
+              },
+            },
           }),
         },
       },
@@ -551,6 +556,8 @@ export async function createAdCreative(
       imageHash: data.image_hash,
       link: normalizedLink,
       linkOriginal: data.link,
+      hasCallToAction: !!data.call_to_action_type,
+      callToActionType: data.call_to_action_type,
     });
 
     const response = await metaApi.post(
