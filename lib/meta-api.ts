@@ -512,6 +512,8 @@ export async function createAdCreative(
   },
   accessToken: string
 ) {
+  let creativeData: Record<string, any> = {};
+
   try {
     const formattedId = formatAdAccountId(adAccountId);
 
@@ -529,7 +531,7 @@ export async function createAdCreative(
     const normalizedLink = normalizeUrl(data.link);
 
     // Meta API v24 creative creation using object_story_spec
-    const creativeData: Record<string, any> = {
+    creativeData = {
       name: data.name,
       object_story_spec: {
         page_id: data.page_id,
