@@ -84,12 +84,17 @@ export default function AdSetAds({ adSet }: AdSetAdsProps) {
   return (
     <div className="bg-white rounded-lg p-4 mt-3 space-y-4 border-l-4 border-poppy-light-purple">
       <div className="flex justify-between items-center">
-        <h5 className="font-poppins font-semibold text-gray-900">
-          Ads ({ads.length})
-        </h5>
+        <div className="flex-1">
+          <h5 className="font-poppins font-semibold text-gray-900 mb-1">
+            Ads ({ads.length})
+          </h5>
+          <p className="text-xs text-gray-500">
+            Ads inherit budget from their Ad Set. Budgets are managed at the Campaign & Ad Set level.
+          </p>
+        </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="text-xs btn-secondary px-3 py-1"
+          className="text-xs btn-secondary px-3 py-1 whitespace-nowrap ml-4"
         >
           + Add Ad
         </button>
