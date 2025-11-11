@@ -48,13 +48,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!adAccountId || !pageId || !creativeName || !message || !link) {
+    // Trim whitespace
+    const trimmedPageId = pageId?.trim() || "";
+    const trimmedCreativeName = creativeName?.trim() || "";
+    const trimmedMessage = message?.trim() || "";
+    const trimmedLink = link?.trim() || "";
+
+    if (!adAccountId || !trimmedPageId || !trimmedCreativeName || !trimmedMessage || !trimmedLink) {
       const missing = [];
       if (!adAccountId) missing.push("adAccountId");
-      if (!pageId) missing.push("pageId");
-      if (!creativeName) missing.push("creativeName");
-      if (!message) missing.push("message");
-      if (!link) missing.push("link");
+      if (!trimmedPageId) missing.push("pageId");
+      if (!trimmedCreativeName) missing.push("creativeName");
+      if (!trimmedMessage) missing.push("message");
+      if (!trimmedLink) missing.push("link");
 
       console.error("❌ Missing required fields:", missing);
       return NextResponse.json(
@@ -100,12 +106,12 @@ export async function POST(request: NextRequest) {
       creative = await createAdCreative(
         adAccountId,
         {
-          name: creativeName,
-          page_id: pageId,
+          name: trimmedCreativeName,
+          page_id: trimmedPageId,
           image_hash: imageHash,
-          link,
-          message,
-          headline: headline || undefined,
+          link: trimmedLink,
+          message: trimmedMessage,
+          headline: headline?.trim() || undefined,
           call_to_action_type: ctaType || undefined,
         },
         session.accessToken

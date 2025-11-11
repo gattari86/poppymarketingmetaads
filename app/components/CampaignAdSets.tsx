@@ -21,23 +21,36 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
   const [activatingCampaign, setActivatingCampaign] = useState(false);
   const [activationError, setActivationError] = useState("");
   const [togglingAdSetId, setTogglingAdSetId] = useState<string | null>(null);
-  const [pageId, setPageId] = useState(() => {
-    // Try to get pageId from localStorage or prompt user
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("pageId") || "";
-    }
-    return "";
-  });
+  const [pageId, setPageId] = useState("");
 
-  // Ensure pageId is set (needed for creative creation)
+  // Fetch user's Facebook Pages on mount
   useEffect(() => {
-    if (!pageId && typeof window !== "undefined") {
-      const storedPageId = localStorage.getItem("pageId");
-      if (storedPageId) {
-        setPageId(storedPageId);
+    const fetchPages = async () => {
+      try {
+        console.log("📄 Fetching Facebook Pages...");
+        const response = await fetch("/api/pages");
+        if (response.ok) {
+          const data = await response.json();
+
+          // Auto-select first page if available
+          if (data.pages && data.pages.length > 0) {
+            const firstPageId = data.pages[0].id;
+            setPageId(firstPageId);
+            localStorage.setItem("pageId", firstPageId);
+            console.log("✅ Auto-selected first page:", firstPageId);
+          }
+        } else {
+          console.error("Failed to fetch pages");
+          toast.error("Failed to load Facebook Pages. Please check your Meta connection.");
+        }
+      } catch (error) {
+        console.error("Error fetching pages:", error);
+        toast.error("Failed to load Facebook Pages");
       }
-    }
-  }, [pageId]);
+    };
+
+    fetchPages();
+  }, []);
 
   // Debug: Log the account ID
   useEffect(() => {
