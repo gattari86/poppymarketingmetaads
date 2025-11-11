@@ -17,7 +17,7 @@ type SortOption = "newest" | "oldest" | "name-asc" | "name-desc";
 
 function CampaignsContent() {
   const searchParams = useSearchParams();
-  const accountId = searchParams.get("accountId") || localStorage.getItem("selectedAdAccountId");
+  const accountId = String(searchParams.get("accountId") || localStorage.getItem("selectedAdAccountId") || "").trim();
 
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
