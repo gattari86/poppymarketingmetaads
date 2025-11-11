@@ -91,6 +91,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
+    console.log("📝 Ad set request body:", JSON.stringify(body, null, 2));
+
     if (!body.name) {
       return Response.json(
         { error: "Missing required field: name" },
@@ -101,7 +103,7 @@ export async function POST(request: Request) {
     const result = await createAdSet(adAccountId, campaignId, body, session.accessToken);
     return Response.json(result, { status: 201 });
   } catch (error) {
-    console.error("Error creating ad set:", error);
+    console.error("❌ Error creating ad set:", error);
 
     if (error instanceof Error) {
       const errorMessage = error.message;
@@ -109,15 +111,27 @@ export async function POST(request: Request) {
       if ("response" in error && typeof error.response === "object" && error.response !== null) {
         const axiosError = error as any;
         const metaErrorData = axiosError.response?.data;
+
+        console.error("📊 Full Meta API Response:", {
+          status: axiosError.response?.status,
+          statusText: axiosError.response?.statusText,
+          data: metaErrorData,
+          config: axiosError.config,
+        });
+
         if (metaErrorData?.error) {
-          return Response.json(
-            {
-              error: metaErrorData.error.message || metaErrorData.error.type || "Meta API Error",
-              code: metaErrorData.error.code,
-              details: metaErrorData.error,
-            },
-            { status: axiosError.response?.status || 500 }
-          );
+          const fullErrorDetails = {
+            error: metaErrorData.error.message || metaErrorData.error.type || "Meta API Error",
+            code: metaErrorData.error.code,
+            subcode: metaErrorData.error?.error_subcode,
+            type: metaErrorData.error?.type,
+            details: metaErrorData.error,
+            fullResponse: metaErrorData,
+          };
+
+          console.error("🔴 Detailed error:", fullErrorDetails);
+
+          return Response.json(fullErrorDetails, { status: axiosError.response?.status || 500 });
         }
       }
 
