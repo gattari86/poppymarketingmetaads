@@ -68,6 +68,9 @@ export default function CreateAdModal({
         if (!creativeName.trim()) throw new Error("Creative name is required");
         if (!message.trim()) throw new Error("Ad message/body text is required");
         if (!link.trim()) throw new Error("Landing page URL is required");
+        if (!displayLink.trim()) throw new Error("Display Link is required");
+        if (!primaryText.trim()) throw new Error("Primary Text is required");
+        if (!description.trim()) throw new Error("Description is required");
 
         // Create creative first
         const formData = new FormData();
@@ -382,7 +385,7 @@ export default function CreateAdModal({
 
                   <div className="space-y-2.5">
                     <label className="block text-sm md:text-base font-semibold text-gray-900">
-                      Display Link <span className="text-gray-400 font-normal">(optional)</span>
+                      Display Link <span className="text-red-500 font-bold">*</span>
                     </label>
                     <input
                       type="text"
@@ -406,7 +409,7 @@ export default function CreateAdModal({
                 {/* Primary Text */}
                 <div className="space-y-2.5">
                   <label className="block text-sm md:text-base font-semibold text-gray-900">
-                    Primary Text <span className="text-gray-400 font-normal">(optional)</span>
+                    Primary Text <span className="text-red-500 font-bold">*</span>
                   </label>
                   <textarea
                     value={primaryText}
@@ -423,7 +426,7 @@ export default function CreateAdModal({
                 {/* Description */}
                 <div className="space-y-2.5">
                   <label className="block text-sm md:text-base font-semibold text-gray-900">
-                    Description <span className="text-gray-400 font-normal">(optional)</span>
+                    Description <span className="text-red-500 font-bold">*</span>
                   </label>
                   <textarea
                     value={description}
@@ -570,7 +573,7 @@ export default function CreateAdModal({
             </button>
             <button
               type="submit"
-              disabled={loading || !adName || (mode === "create" && (!image || !creativeName || !message || !link)) || (mode === "existing" && !creativeId)}
+              disabled={loading || !adName || (mode === "create" && (!image || !creativeName || !message || !link || !displayLink || !primaryText || !description)) || (mode === "existing" && !creativeId)}
               onClick={handleSubmit}
               className="flex-1 px-4 md:px-6 py-3 md:py-4 text-sm md:text-base font-semibold bg-poppy-dark-purple text-white rounded-lg hover:bg-poppy-dark-purple/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
             >
