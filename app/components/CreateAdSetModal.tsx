@@ -60,8 +60,13 @@ export default function CreateAdSetModal({
           optimization_goal: optimizationGoal,
           billing_event: billingEvent,
           bid_amount: bidAmountCents, // Convert dollars to cents as integer
+          // Meta v24 requires targeting with proper structure
           targeting: {
-            geo_locations: [{ country: "US" }],
+            geo_locations: {
+              countries: ["US"], // Use "countries" key with array
+            },
+            age_min: 18,
+            age_max: 65,
           },
         }),
       });

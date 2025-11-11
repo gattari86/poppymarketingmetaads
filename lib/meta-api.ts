@@ -148,14 +148,23 @@ export async function createAdSet(
   // campaign_id is sent in the request body, not in URL
   const formattedAccountId = formatAdAccountId(adAccountId);
 
+  // Meta v24 targeting spec requires specific structure
+  // geo_locations needs "regions" or "cities" or just "countries" array (not wrapped in object)
+  const defaultTargeting = {
+    geo_locations: {
+      countries: ["US"], // Use "countries" key with array, not "country" in object
+    },
+    // Add other required targeting fields for v24
+    age_min: 18,
+    age_max: 65,
+  };
+
   const adSetData: Record<string, any> = {
     name: data.name,
     campaign_id: campaignId, // REQUIRED: send campaign_id in body
     status: data.status,
     daily_budget: Math.round(data.daily_budget || 1000), // Ensure integer cents
-    targeting: data.targeting || {
-      geo_locations: [{ country: "US" }],
-    },
+    targeting: data.targeting || defaultTargeting,
     // REQUIRED: optimization_goal - what to optimize for
     optimization_goal: data.optimization_goal || "REACH",
     // REQUIRED: billing_event - when to charge (IMPRESSIONS, LINK_CLICKS, etc)
