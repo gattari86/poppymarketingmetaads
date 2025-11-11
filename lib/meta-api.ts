@@ -255,6 +255,28 @@ export async function updateCampaignStatus(
   }
 }
 
+export async function getAutomatedRules(
+  adAccountId: string,
+  accessToken: string
+) {
+  try {
+    const formattedId = formatAdAccountId(adAccountId);
+    const response = await metaApi.get(
+      `/${formattedId}/adrules_library`,
+      {
+        params: {
+          access_token: accessToken,
+          fields: "id,name,status,evaluation_spec,execution_spec,created_time,updated_time",
+        },
+      }
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching automated rules:", error);
+    throw error;
+  }
+}
+
 export async function createAutomatedRule(
   adAccountId: string,
   data: {

@@ -59,6 +59,12 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
     error: "/auth/error",
   },
-  secret: process.env.NEXTAUTH_SECRET || "fallback-secure-key-change-me-in-production",
+  secret: process.env.NEXTAUTH_SECRET || (() => {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("NEXTAUTH_SECRET environment variable is required in production");
+    }
+    // Only allow fallback in development
+    return "dev-fallback-key-only-for-development";
+  })(),
   debug: process.env.NODE_ENV === "development",
 };
