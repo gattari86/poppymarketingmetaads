@@ -58,7 +58,15 @@ export default function CreateAdSetModal({
         let errorMessage = "Failed to create ad set";
         try {
           const errorData = await response.json();
-          errorMessage = errorData.error || errorData.message || errorMessage;
+          console.error("Ad set creation error response:", errorData);
+
+          // Extract detailed error information
+          if (errorData.details) {
+            errorMessage = `${errorData.error || errorMessage} (Code: ${errorData.code})`;
+            console.error("Meta API error details:", errorData.details);
+          } else {
+            errorMessage = errorData.error || errorData.message || errorMessage;
+          }
         } catch {
           errorMessage = response.statusText || errorMessage;
         }

@@ -173,6 +173,8 @@ export async function createAdSet(
       optimization_goal: adSetData.optimization_goal,
       billing_event: adSetData.billing_event,
       status: adSetData.status,
+      targeting: adSetData.targeting,
+      bid_amount: adSetData.bid_amount,
     });
 
     // Correct endpoint: POST /act_{ad_account_id}/adsets with campaign_id in body
@@ -183,7 +185,28 @@ export async function createAdSet(
     });
     return response.data;
   } catch (error) {
-    console.error("Error creating ad set:", error);
+    // Enhanced error logging to capture Meta API error details
+    if (error instanceof Error) {
+      console.error("Error creating ad set:", {
+        message: error.message,
+        name: error.name,
+      });
+
+      // Check if it's an axios error with response data
+      if ("response" in error && typeof error.response === "object" && error.response !== null) {
+        const axiosError = error as any;
+        const metaErrorData = axiosError.response?.data;
+        console.error("Meta API Error Details:", {
+          status: axiosError.response?.status,
+          errorCode: metaErrorData?.error?.code,
+          errorType: metaErrorData?.error?.type,
+          errorMessage: metaErrorData?.error?.message,
+          errorSubcode: metaErrorData?.error?.error_subcode,
+          fullError: metaErrorData?.error,
+          requestData: adSetData,
+        });
+      }
+    }
     throw error;
   }
 }
