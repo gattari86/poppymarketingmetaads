@@ -1,7 +1,64 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { createAutomatedRule } from "@/lib/meta-api";
+import { createAutomatedRule, getAutomatedRules } from "@/lib/meta-api";
 import type { ExtendedSession } from "@/lib/types";
+
+export async function GET(request: Request) {
+  const session = (await getServerSession(authOptions)) as ExtendedSession;
+
+  if (!session?.accessToken) {
+    return Response.json(
+      { error: "Unauthorized - No access token" },
+      { status: 401 }
+    );
+  }
+
+  const url = new URL(request.url);
+  const adAccountId = url.searchParams.get("adAccountId");
+
+  if (!adAccountId) {
+    return Response.json(
+      { error: "Missing required parameter: adAccountId" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const rules = await getAutomatedRules(adAccountId, session.accessToken);
+    return Response.json(rules);
+  } catch (error) {
+    console.error("Error fetching automated rules:", error);
+
+    if (error instanceof Error) {
+      const errorMessage = error.message;
+
+      if ("response" in error && typeof error.response === "object" && error.response !== null) {
+        const axiosError = error as any;
+        const metaErrorData = axiosError.response?.data;
+        if (metaErrorData?.error) {
+          return Response.json(
+            {
+              error: metaErrorData.error.message || metaErrorData.error.type || "Meta API Error",
+              code: metaErrorData.error.code,
+              details: metaErrorData.error,
+            },
+            { status: axiosError.response?.status || 500 }
+          );
+        }
+      }
+
+      return Response.json(
+        { error: errorMessage },
+        { status: 500 }
+      );
+    }
+
+    return Response.json(
+      { error: "Failed to fetch automated rules - Unknown error" },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: Request) {
   const session = (await getServerSession(authOptions)) as ExtendedSession;

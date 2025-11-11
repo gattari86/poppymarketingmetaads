@@ -71,7 +71,15 @@ export async function POST(request: Request) {
   }
 
   const url = new URL(request.url);
+  const adAccountId = url.searchParams.get("adAccountId");
   const campaignId = url.searchParams.get("campaignId");
+
+  if (!adAccountId) {
+    return Response.json(
+      { error: "Missing required parameter: adAccountId" },
+      { status: 400 }
+    );
+  }
 
   if (!campaignId) {
     return Response.json(
@@ -90,7 +98,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await createAdSet(campaignId, body, session.accessToken);
+    const result = await createAdSet(adAccountId, campaignId, body, session.accessToken);
     return Response.json(result, { status: 201 });
   } catch (error) {
     console.error("Error creating ad set:", error);

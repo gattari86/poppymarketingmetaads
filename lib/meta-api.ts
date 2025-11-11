@@ -130,17 +130,53 @@ export async function createCampaign(
 }
 
 export async function createAdSet(
+  adAccountId: string,
   campaignId: string,
   data: {
     name: string;
     status: string;
     daily_budget?: number;
     targeting?: Record<string, unknown>;
+    bid_amount?: number;
+    optimization_goal?: string;
+    billing_event?: string;
   },
   accessToken: string
 ) {
   try {
-    const response = await metaApi.post(`/${campaignId}/adsets`, data, {
+    // Meta API v24 CORRECT endpoint: POST /act_{ad_account_id}/adsets
+    // NOT /{campaignId}/adsets - that doesn't exist!
+    // campaign_id is sent in the request body, not in URL
+    const formattedAccountId = formatAdAccountId(adAccountId);
+
+    const adSetData: Record<string, any> = {
+      name: data.name,
+      campaign_id: campaignId, // REQUIRED: send campaign_id in body
+      status: data.status,
+      daily_budget: data.daily_budget || 1000, // Default $10/day in cents
+      targeting: data.targeting || {
+        geo_locations: [{ country: "US" }],
+      },
+      // REQUIRED: optimization_goal - what to optimize for
+      optimization_goal: data.optimization_goal || "REACH",
+      // REQUIRED: billing_event - when to charge (IMPRESSIONS, LINK_CLICKS, etc)
+      billing_event: data.billing_event || "IMPRESSIONS",
+      // RECOMMENDED: bid_amount - how much to bid per event
+      bid_amount: data.bid_amount || 500, // Default 5 cents
+    };
+
+    console.log("Creating ad set with v24 parameters:", {
+      accountId: formattedAccountId,
+      campaignId,
+      name: adSetData.name,
+      daily_budget: adSetData.daily_budget,
+      optimization_goal: adSetData.optimization_goal,
+      billing_event: adSetData.billing_event,
+      status: adSetData.status,
+    });
+
+    // Correct endpoint: POST /act_{ad_account_id}/adsets with campaign_id in body
+    const response = await metaApi.post(`/${formattedAccountId}/adsets`, adSetData, {
       params: {
         access_token: accessToken,
       },
@@ -156,18 +192,36 @@ export async function createAd(
   adSetId: string,
   data: {
     name: string;
-    adset_id: string;
+    adset_id?: string;
     creative: {
       creative_id?: string;
       title?: string;
       body?: string;
       image_url?: string;
     };
+    status?: string;
   },
   accessToken: string
 ) {
   try {
-    const response = await metaApi.post(`/${adSetId}/ads`, data, {
+    // Meta API v24 requires specific parameters for ad creation
+    const adData: Record<string, any> = {
+      name: data.name,
+      adset_id: adSetId,
+      creative: data.creative,
+      // REQUIRED in v24: status - should be PAUSED for new ads
+      status: data.status || "PAUSED",
+    };
+
+    console.log("Creating ad with v24 parameters:", {
+      adSetId,
+      name: adData.name,
+      status: adData.status,
+      hasCreative: !!adData.creative,
+      creativeType: adData.creative.creative_id ? "existing" : "new",
+    });
+
+    const response = await metaApi.post(`/${adSetId}/ads`, adData, {
       params: {
         access_token: accessToken,
       },
@@ -175,6 +229,50 @@ export async function createAd(
     return response.data;
   } catch (error) {
     console.error("Error creating ad:", error);
+    throw error;
+  }
+}
+
+export async function updateCampaignStatus(
+  campaignId: string,
+  status: "ACTIVE" | "PAUSED" | "DELETED" | "ARCHIVED",
+  accessToken: string
+) {
+  try {
+    const response = await metaApi.post(
+      `/${campaignId}`,
+      { status },
+      {
+        params: {
+          access_token: accessToken,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating campaign status:", error);
+    throw error;
+  }
+}
+
+export async function getAutomatedRules(
+  adAccountId: string,
+  accessToken: string
+) {
+  try {
+    const formattedId = formatAdAccountId(adAccountId);
+    const response = await metaApi.get(
+      `/${formattedId}/adrules_library`,
+      {
+        params: {
+          access_token: accessToken,
+          fields: "id,name,status,evaluation_spec,execution_spec,created_time,updated_time",
+        },
+      }
+    );
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching automated rules:", error);
     throw error;
   }
 }

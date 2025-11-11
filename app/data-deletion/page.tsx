@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Breadcrumb from "@/app/components/Breadcrumb";
 import Link from "next/link";
+import { Envelope } from "@phosphor-icons/react";
 
 const FORMSPREE_ID = "mzzybzwr";
 
@@ -72,8 +73,9 @@ export default function DataDeletion() {
             Submitting your email below will initiate our data deletion process. We will contact you at your provided email address within 2-5 business days to verify your identity and confirm the deletion request before proceeding.
           </p>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <p className="text-sm text-blue-900">
-              <strong>📧 Important:</strong> You must be able to access the email address you provide, as we will send a verification message to confirm your identity before deleting your data.
+            <p className="text-sm text-blue-900 flex items-start gap-2">
+              <Envelope size={20} weight="duotone" className="text-blue-700 flex-shrink-0 mt-0.5" />
+              <span><strong>Important:</strong> You must be able to access the email address you provide, as we will send a verification message to confirm your identity before deleting your data.</span>
             </p>
           </div>
 

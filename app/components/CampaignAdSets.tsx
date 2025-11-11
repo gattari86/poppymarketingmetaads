@@ -8,14 +8,18 @@ import AdSetAds from "./AdSetAds";
 import { Spinner } from "./SkeletonLoaders";
 
 interface CampaignAdSetsProps {
+  adAccountId: string;
   campaign: Campaign;
+  onCampaignUpdate?: (updatedCampaign: Campaign) => void;
 }
 
-export default function CampaignAdSets({ campaign }: CampaignAdSetsProps) {
+export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate }: CampaignAdSetsProps) {
   const [adSets, setAdSets] = useState<AdSet[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedAdSet, setSelectedAdSet] = useState<AdSet | null>(null);
+  const [activatingCampaign, setActivatingCampaign] = useState(false);
+  const [activationError, setActivationError] = useState("");
 
   useEffect(() => {
     const fetchAdSets = async () => {
@@ -45,6 +49,54 @@ export default function CampaignAdSets({ campaign }: CampaignAdSetsProps) {
     setShowCreateModal(false);
   };
 
+  const handleActivateCampaign = async () => {
+    setActivatingCampaign(true);
+    setActivationError("");
+
+    try {
+      console.log("Activating campaign:", campaign.id);
+
+      const url = `/api/campaigns?campaignId=${campaign.id}&status=ACTIVE`;
+      console.log("Request URL:", url);
+
+      const response = await fetch(url, {
+        method: "PATCH",
+      });
+
+      console.log("Response status:", response.status);
+
+      if (!response.ok) {
+        let errorMessage = "Failed to activate campaign";
+        try {
+          const errorData = await response.json();
+          console.error("Error response:", errorData);
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch {
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const responseData = await response.json();
+      console.log("Activation successful:", responseData);
+
+      // Update campaign status locally
+      const updatedCampaign = { ...campaign, status: "ACTIVE" as const };
+      if (onCampaignUpdate) {
+        console.log("Calling onCampaignUpdate with:", updatedCampaign);
+        onCampaignUpdate(updatedCampaign);
+      } else {
+        console.warn("onCampaignUpdate callback not provided");
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "An error occurred";
+      console.error("Activation error:", errorMsg);
+      setActivationError(errorMsg);
+    } finally {
+      setActivatingCampaign(false);
+    }
+  };
+
   return (
     <div className="bg-gradient-to-br from-poppy-light-purple/5 to-poppy-light-purple/10 border-l-4 border-poppy-dark-purple rounded-lg p-6 space-y-4 animate-fadeIn">
       <div className="flex justify-between items-center">
@@ -55,8 +107,10 @@ export default function CampaignAdSets({ campaign }: CampaignAdSetsProps) {
         </h4>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="text-sm btn-secondary px-4 py-2"
+          disabled={campaign.status !== "ACTIVE"}
+          className="text-sm btn-secondary px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label="Add ad set"
+          title={campaign.status !== "ACTIVE" ? "Campaign must be ACTIVE to add ad sets" : ""}
         >
           <span className="flex items-center gap-2">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,8 +121,36 @@ export default function CampaignAdSets({ campaign }: CampaignAdSetsProps) {
         </button>
       </div>
 
+      {/* Warning: Campaign must be ACTIVE */}
+      {campaign.status !== "ACTIVE" && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <div className="text-yellow-600 text-xl">⚠️</div>
+            <div className="flex-1">
+              <h5 className="font-semibold text-yellow-800 mb-2">Campaign Must Be Active</h5>
+              <p className="text-sm text-yellow-700 mb-3">
+                To create ad sets, this campaign must be in ACTIVE status. Currently it's {campaign.status}.
+              </p>
+              <button
+                onClick={handleActivateCampaign}
+                disabled={activatingCampaign}
+                className="text-sm bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded font-medium disabled:opacity-50"
+              >
+                {activatingCampaign ? "Activating..." : "Activate Campaign"}
+              </button>
+            </div>
+          </div>
+          {activationError && (
+            <p className="text-sm text-red-700 mt-3 bg-red-50 p-2 rounded">
+              Error: {activationError}
+            </p>
+          )}
+        </div>
+      )}
+
       {showCreateModal && (
         <CreateAdSetModal
+          adAccountId={adAccountId}
           campaignId={campaign.id}
           onClose={() => setShowCreateModal(false)}
           onSuccess={handleAdSetCreated}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Ad } from "@/lib/types";
+import { Warning } from "@phosphor-icons/react";
 
 interface CreateAdModalProps {
   adSetId: string;
@@ -41,6 +42,7 @@ export default function CreateAdModal({
       const requestBody: Record<string, unknown> = {
         name: name.trim(),
         adset_id: adSetId,
+        status: "PAUSED", // Meta v24 requires status to be set
       };
 
       if (useExistingCreative) {
@@ -157,8 +159,9 @@ export default function CreateAdModal({
 
             {!useExistingCreative && (
               <div className="space-y-3 ml-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <p className="text-xs text-amber-800 mb-3">
-                  <strong>⚠️ This requires additional setup:</strong> After filling in details below, creatives will need to be uploaded to Meta Ads Manager separately before ads can use them.
+                <p className="text-xs text-amber-800 mb-3 flex items-start gap-2">
+                  <Warning size={16} weight="fill" className="text-amber-700 flex-shrink-0 mt-0.5" />
+                  <span><strong>This requires additional setup:</strong> After filling in details below, creatives will need to be uploaded to Meta Ads Manager separately before ads can use them.</span>
                 </p>
 
                 <div>
