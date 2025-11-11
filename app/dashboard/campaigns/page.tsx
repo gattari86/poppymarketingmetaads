@@ -63,6 +63,41 @@ function CampaignsContent() {
     setShowCreateModal(false);
   };
 
+  const handleDeleteCampaign = async (campaignId: string, campaignName: string) => {
+    // Confirm before deleting
+    if (!window.confirm(`Are you sure you want to delete the campaign "${campaignName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/campaigns?campaignId=${campaignId}`,
+        { method: "DELETE" }
+      );
+
+      if (!response.ok) {
+        let errorMessage = "Failed to delete campaign";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Remove from local state
+      setCampaigns(campaigns.filter(c => c.id !== campaignId));
+      setSelectedCampaign(null);
+      toast.success(`Campaign "${campaignName}" deleted successfully`);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "An error occurred";
+      toast.error("Failed to delete campaign", {
+        description: errorMsg,
+      });
+    }
+  };
+
   // Filter, search, and sort campaigns
   const filteredAndSortedCampaigns = useMemo(() => {
     let result = campaigns;
@@ -367,10 +402,25 @@ function CampaignsContent() {
                           )}
                         </div>
                       </div>
-                      <div className={`text-gray-400 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}>
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCampaign(campaign.id, campaign.name);
+                          }}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete campaign"
+                          aria-label="Delete campaign"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                        <div className={`text-gray-400 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}>
+                          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
                       </div>
                     </div>
                   </button>

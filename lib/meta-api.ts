@@ -295,6 +295,29 @@ export async function updateCampaignStatus(
   }
 }
 
+export async function deleteCampaign(
+  campaignId: string,
+  accessToken: string
+) {
+  try {
+    console.log("🗑️ Deleting campaign:", campaignId);
+    const response = await metaApi.post(
+      `/${campaignId}`,
+      { status: "DELETED" },
+      {
+        params: {
+          access_token: accessToken,
+        },
+      }
+    );
+    console.log("✅ Campaign deleted successfully:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting campaign:", error);
+    throw error;
+  }
+}
+
 export async function getAutomatedRules(
   adAccountId: string,
   accessToken: string
