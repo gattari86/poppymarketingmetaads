@@ -16,7 +16,7 @@ export default function CreateAdModal({
   onSuccess,
 }: CreateAdModalProps) {
   const [name, setName] = useState("");
-  const [useExistingCreative, setUseExistingCreative] = useState(true);
+  const [useExistingCreative, setUseExistingCreative] = useState(false);
   const [creativeId, setCreativeId] = useState("");
   const [headline, setHeadline] = useState("");
   const [primaryText, setPrimaryText] = useState("");
@@ -131,40 +131,7 @@ export default function CreateAdModal({
           </div>
 
           <div className="space-y-3">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <p className="text-xs text-blue-800">
-                <strong>Note:</strong> Creatives must be created in Meta Ads Manager first. Enter the creative ID from your ad account.
-              </p>
-            </div>
-
             <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                checked={useExistingCreative}
-                onChange={() => setUseExistingCreative(true)}
-                className="w-4 h-4"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Use Existing Creative (Recommended)
-              </span>
-            </label>
-
-            {useExistingCreative && (
-              <div className="ml-6 space-y-2">
-                <input
-                  type="text"
-                  value={creativeId}
-                  onChange={(e) => setCreativeId(e.target.value)}
-                  placeholder="Enter creative ID (e.g., 123456789)"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
-                />
-                <p className="text-xs text-gray-500">
-                  Find creative IDs in Meta Ads Manager under Assets → Creatives
-                </p>
-              </div>
-            )}
-
-            <label className="flex items-center gap-2 cursor-pointer mt-4">
               <input
                 type="radio"
                 checked={!useExistingCreative}
@@ -172,7 +139,7 @@ export default function CreateAdModal({
                 className="w-4 h-4"
               />
               <span className="text-sm font-medium text-gray-700">
-                Create New Creative (Alternative)
+                Create Ad Content (Recommended)
               </span>
             </label>
 
@@ -180,7 +147,7 @@ export default function CreateAdModal({
               <div className="space-y-3 ml-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-xs text-amber-800 mb-3 flex items-start gap-2">
                   <Warning size={16} weight="fill" className="text-amber-700 flex-shrink-0 mt-0.5" />
-                  <span><strong>Create inline creative:</strong> Fill in all details below. These fields will be sent to Meta as creative data.</span>
+                  <span><strong>Fill in your ad details below:</strong> Provide the headline, text, image, landing page, and call-to-action. This creates the complete ad content right here.</span>
                 </p>
 
                 <div>
@@ -283,6 +250,36 @@ export default function CreateAdModal({
                     Button text shown to users (e.g., "Shop Now", "Learn More")
                   </p>
                 </div>
+              </div>
+            )}
+
+            <label className="flex items-center gap-2 cursor-pointer mt-4">
+              <input
+                type="radio"
+                checked={useExistingCreative}
+                onChange={() => setUseExistingCreative(true)}
+                className="w-4 h-4"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                Use Existing Creative ID
+              </span>
+            </label>
+
+            {useExistingCreative && (
+              <div className="ml-6 space-y-2 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-xs text-blue-700 mb-3">
+                  If you've already created creatives in Meta Ads Manager, you can reuse them here.
+                </p>
+                <input
+                  type="text"
+                  value={creativeId}
+                  onChange={(e) => setCreativeId(e.target.value)}
+                  placeholder="Enter creative ID (e.g., 123456789)"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Find creative IDs in Meta Ads Manager under Assets → Creatives
+                </p>
               </div>
             )}
           </div>
