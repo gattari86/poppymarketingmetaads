@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { AdSet } from "@/lib/types";
 
 interface CreateAdSetModalProps {
@@ -23,6 +23,14 @@ export default function CreateAdSetModal({
   const [bidAmount, setBidAmount] = useState("0.05");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Debug: Log the IDs
+  useEffect(() => {
+    console.log("🔍 CreateAdSetModal received:", {
+      adAccountId,
+      campaignId,
+    });
+  }, [adAccountId, campaignId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

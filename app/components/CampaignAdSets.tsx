@@ -21,6 +21,15 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
   const [activatingCampaign, setActivatingCampaign] = useState(false);
   const [activationError, setActivationError] = useState("");
 
+  // Debug: Log the account ID
+  useEffect(() => {
+    console.log("🔍 CampaignAdSets received adAccountId:", {
+      value: adAccountId,
+      type: typeof adAccountId,
+      length: adAccountId?.length,
+    });
+  }, [adAccountId]);
+
   useEffect(() => {
     const fetchAdSets = async () => {
       try {
