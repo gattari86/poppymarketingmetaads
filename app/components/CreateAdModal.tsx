@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Ad } from "@/lib/types";
 
 interface CreateAdModalProps {
@@ -34,6 +34,14 @@ export default function CreateAdModal({
 
   // Local pageId state - can override if prop is empty
   const [localPageId, setLocalPageId] = useState(pageId || "");
+
+  // Update localPageId when the prop changes (e.g., when switching accounts)
+  useEffect(() => {
+    if (pageId) {
+      setLocalPageId(pageId);
+      console.log("🔄 Updated localPageId to:", pageId);
+    }
+  }, [pageId, adAccountId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
