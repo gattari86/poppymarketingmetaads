@@ -96,14 +96,25 @@ export default function CreateAdModal({
         if (!creativeId.trim()) throw new Error("Creative ID is required");
       }
 
-      // Now create the ad with the creative ID
-      const adRequestBody = {
+      // Now create the ad with the creative ID and all new fields
+      const adRequestBody: Record<string, any> = {
         name: adName.trim(),
         adset_id: adSetId,
         status: "PAUSED",
         creative: {
           creative_id: finalCreativeId,
         },
+        // Add optional destination fields if provided
+        ...(displayLink && { display_link: displayLink.trim() }),
+        // Add optional ad copy fields if provided
+        ...(primaryText && { primary_text: primaryText.trim() }),
+        ...(description && { adset_description: description.trim() }),
+        // Add tracking if enabled
+        ...(trackingEnabled && trackingPixel && {
+          conversion_spec: [{
+            conversion_pixel_id: trackingPixel.trim(),
+          }]
+        }),
       };
 
       const adResponse = await fetch(`/api/ads?adSetId=${adSetId}`, {

@@ -242,11 +242,24 @@ export async function createAd(
       image_url?: string;
     };
     status?: string;
+    // Optional destination fields
+    display_link?: string;
+    // Optional ad copy fields
+    primary_text?: string;
+    adset_description?: string;
+    // Optional tracking fields
+    conversion_spec?: Array<{
+      conversion_pixel_id?: string;
+      conversion_event_id?: string;
+    }>;
+    // Allow any other Meta API v24 ad fields
+    [key: string]: any;
   },
   accessToken: string
 ) {
   try {
     // Meta API v24 requires specific parameters for ad creation
+    // Build ad data, copying all provided fields to allow flexibility
     const adData: Record<string, any> = {
       name: data.name,
       adset_id: adSetId,
@@ -255,12 +268,40 @@ export async function createAd(
       status: data.status || "PAUSED",
     };
 
+    // Add optional destination fields
+    if (data.display_link) {
+      adData.display_link = data.display_link;
+    }
+
+    // Add optional ad copy fields
+    if (data.primary_text) {
+      adData.primary_text = data.primary_text;
+    }
+    if (data.adset_description) {
+      adData.adset_description = data.adset_description;
+    }
+
+    // Add optional tracking/conversion spec
+    if (data.conversion_spec) {
+      adData.conversion_spec = data.conversion_spec;
+    }
+
+    // Pass through any other fields that were provided
+    for (const [key, value] of Object.entries(data)) {
+      if (!adData.hasOwnProperty(key) && value !== undefined) {
+        adData[key] = value;
+      }
+    }
+
     console.log("Creating ad with v24 parameters:", {
       adSetId,
       name: adData.name,
       status: adData.status,
       hasCreative: !!adData.creative,
       creativeType: adData.creative.creative_id ? "existing" : "new",
+      hasDisplayLink: !!adData.display_link,
+      hasPrimaryText: !!adData.primary_text,
+      hasTracking: !!adData.conversion_spec,
     });
 
     const response = await metaApi.post(`/${adSetId}/ads`, adData, {
