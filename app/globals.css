@@ -166,12 +166,49 @@ p {
   }
 }
 
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(2rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Animation utilities */
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 /* Grid Alignment Helper */
 .grid-cols-safe {
   @apply grid gap-6;
 }
 
-/* Responsive Spacing */
+/* Responsive Spacing and Mobile Optimizations */
 @media (max-width: 640px) {
   h1 {
     font-size: var(--text-3xl);
@@ -191,11 +228,47 @@ p {
 
   .modal-content {
     padding: var(--spacing-lg);
+    max-height: 90vh;
+    overflow-y: auto;
   }
 
   .btn-primary, .btn-secondary, .btn-outline {
     padding-left: 1.5rem;
     padding-right: 1.5rem;
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
     font-size: var(--text-sm);
+    min-height: 44px; /* Minimum touch target size */
   }
+
+  /* Improve touch targets for mobile */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Stack elements vertically on mobile */
+  .modal-content form {
+    gap: 1.25rem;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid #736CED;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
