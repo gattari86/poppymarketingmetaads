@@ -23,69 +23,20 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
   const [togglingAdSetId, setTogglingAdSetId] = useState<string | null>(null);
   const [pageId, setPageId] = useState("");
 
-  // Fetch user's Facebook Pages on mount
+  // Check for saved pageId for this specific ad account
+  // IMPORTANT: Do NOT auto-fetch pages from /api/pages because it returns pages for the authenticated user
+  // (not the current ad account being viewed), which causes cross-account pageId carryover
   useEffect(() => {
-    const fetchPages = async () => {
-      try {
-        console.log("📄 Fetching Facebook Pages...");
-        const response = await fetch("/api/pages");
+    const accountKey = `pageId_${adAccountId}`;
+    const storedPageId = localStorage.getItem(accountKey);
 
-        console.log("📄 Pages endpoint response status:", response.status);
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log("📄 Pages data received:", data);
-
-          // Auto-select first page if available
-          if (data.pages && data.pages.length > 0) {
-            const firstPageId = data.pages[0].id;
-            setPageId(firstPageId);
-            // Store pageId scoped to this ad account
-            const accountKey = `pageId_${adAccountId}`;
-            localStorage.setItem(accountKey, firstPageId);
-            console.log("✅ Auto-selected first page:", firstPageId, "for account:", adAccountId);
-          } else {
-            console.warn("⚠️ No pages returned from API");
-            // Fallback: check localStorage for this specific account
-            const accountKey = `pageId_${adAccountId}`;
-            const storedPageId = localStorage.getItem(accountKey);
-            if (storedPageId) {
-              setPageId(storedPageId);
-              console.log("✅ Using stored pageId from localStorage:", storedPageId);
-            }
-          }
-        } else {
-          console.error("❌ Pages endpoint failed with status:", response.status);
-          const errorData = await response.json().catch(() => ({}));
-          console.error("❌ Error response:", errorData);
-
-          // Fallback: check localStorage for this specific account
-          const accountKey = `pageId_${adAccountId}`;
-          const storedPageId = localStorage.getItem(accountKey);
-          if (storedPageId) {
-            setPageId(storedPageId);
-            console.log("✅ Using stored pageId from localStorage:", storedPageId);
-            toast.info("Using saved Facebook Page ID from previous session");
-          } else {
-            toast.error("Please set your Facebook Page ID in the create ad dialog");
-          }
-        }
-      } catch (error) {
-        console.error("❌ Error fetching pages:", error);
-
-        // Fallback: check localStorage for this specific account
-        const accountKey = `pageId_${adAccountId}`;
-        const storedPageId = localStorage.getItem(accountKey);
-        if (storedPageId) {
-          setPageId(storedPageId);
-          console.log("✅ Using stored pageId from localStorage:", storedPageId);
-        } else {
-          console.warn("⚠️ No pageId available - user will need to set it");
-        }
-      }
-    };
-
-    fetchPages();
+    if (storedPageId) {
+      setPageId(storedPageId);
+      console.log("✅ Loaded pageId for account", adAccountId, ":", storedPageId);
+    } else {
+      console.warn("⚠️ No saved pageId for account", adAccountId, "- user will need to set it in the create ad dialog");
+      setPageId(""); // Clear any stale pageId from previous account
+    }
   }, [adAccountId]);
 
   // Debug: Log the account ID
