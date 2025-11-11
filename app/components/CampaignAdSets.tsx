@@ -48,14 +48,22 @@ export default function CampaignAdSets({ campaign, onCampaignUpdate }: CampaignA
     setActivationError("");
 
     try {
-      const response = await fetch(`/api/campaigns?campaignId=${campaign.id}&status=ACTIVE`, {
+      console.log("Activating campaign:", campaign.id);
+
+      const url = `/api/campaigns?campaignId=${campaign.id}&status=ACTIVE`;
+      console.log("Request URL:", url);
+
+      const response = await fetch(url, {
         method: "PATCH",
       });
+
+      console.log("Response status:", response.status);
 
       if (!response.ok) {
         let errorMessage = "Failed to activate campaign";
         try {
           const errorData = await response.json();
+          console.error("Error response:", errorData);
           errorMessage = errorData.error || errorData.message || errorMessage;
         } catch {
           errorMessage = response.statusText || errorMessage;
@@ -63,13 +71,21 @@ export default function CampaignAdSets({ campaign, onCampaignUpdate }: CampaignA
         throw new Error(errorMessage);
       }
 
+      const responseData = await response.json();
+      console.log("Activation successful:", responseData);
+
       // Update campaign status locally
       const updatedCampaign = { ...campaign, status: "ACTIVE" as const };
       if (onCampaignUpdate) {
+        console.log("Calling onCampaignUpdate with:", updatedCampaign);
         onCampaignUpdate(updatedCampaign);
+      } else {
+        console.warn("onCampaignUpdate callback not provided");
       }
     } catch (err) {
-      setActivationError(err instanceof Error ? err.message : "An error occurred");
+      const errorMsg = err instanceof Error ? err.message : "An error occurred";
+      console.error("Activation error:", errorMsg);
+      setActivationError(errorMsg);
     } finally {
       setActivatingCampaign(false);
     }

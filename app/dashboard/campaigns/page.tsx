@@ -229,7 +229,17 @@ function CampaignsContent() {
 
               {/* Ad Sets */}
               {selectedCampaign?.id === campaign.id && (
-                <CampaignAdSets campaign={campaign} />
+                <CampaignAdSets
+                  campaign={campaign}
+                  onCampaignUpdate={(updatedCampaign) => {
+                    // Update campaigns list with updated status
+                    setCampaigns(campaigns.map(c =>
+                      c.id === updatedCampaign.id ? updatedCampaign : c
+                    ));
+                    // Update selected campaign too
+                    setSelectedCampaign(updatedCampaign);
+                  }}
+                />
               )}
             </div>
             ))
