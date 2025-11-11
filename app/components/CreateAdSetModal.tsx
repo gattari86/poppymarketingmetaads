@@ -24,6 +24,12 @@ export default function CreateAdSetModal({
   const [error, setError] = useState("");
   const [showBudgetWarning] = useState(true);
 
+  // Targeting options
+  const [countries, setCountries] = useState(["US"]);
+  const [ageMin, setAgeMin] = useState("18");
+  const [ageMax, setAgeMax] = useState("65");
+  const [expandTargeting, setExpandTargeting] = useState(false);
+
   // Debug: Log the IDs
   useEffect(() => {
     console.log("🔍 CreateAdSetModal received:", {
@@ -61,10 +67,10 @@ export default function CreateAdSetModal({
           // Meta v24 requires targeting with proper structure
           targeting: {
             geo_locations: {
-              countries: ["US"], // Use "countries" key with array
+              countries: countries, // User-selected countries
             },
-            age_min: 18,
-            age_max: 65,
+            age_min: parseInt(ageMin),
+            age_max: parseInt(ageMax),
           },
         }),
       });
@@ -195,6 +201,87 @@ export default function CreateAdSetModal({
             <p className="text-xs text-gray-500 mt-1">
               Maximum bid per event (e.g., per impression or click)
             </p>
+          </div>
+
+          {/* Targeting Section */}
+          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <button
+              type="button"
+              onClick={() => setExpandTargeting(!expandTargeting)}
+              className="w-full flex items-center justify-between text-left font-medium text-gray-900 hover:bg-gray-100 p-2 rounded transition-colors"
+            >
+              <span>🎯 Audience Targeting</span>
+              <svg
+                className={`w-5 h-5 text-gray-500 transition-transform ${expandTargeting ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </button>
+
+            {expandTargeting && (
+              <div className="mt-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Countries
+                  </label>
+                  <input
+                    type="text"
+                    value={countries.join(", ")}
+                    onChange={(e) => setCountries(e.target.value.split(",").map(c => c.trim().toUpperCase()))}
+                    placeholder="e.g., US, CA, MX"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Enter country codes separated by commas (e.g., US, CA, GB)
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Minimum Age
+                    </label>
+                    <select
+                      value={ageMin}
+                      onChange={(e) => setAgeMin(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                    >
+                      {[13, 18, 21, 25, 30, 35, 40, 45, 50, 55, 60, 65].map((age) => (
+                        <option key={age} value={age}>
+                          {age}+
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Maximum Age
+                    </label>
+                    <select
+                      value={ageMax}
+                      onChange={(e) => setAgeMax(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                    >
+                      {[17, 21, 25, 30, 35, 40, 45, 50, 55, 60, 65, 120].map((age) => (
+                        <option key={age} value={age}>
+                          {age === 120 ? "65+" : age}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                  <p className="text-xs text-blue-700">
+                    <strong>Note:</strong> For interests, behaviors, and detailed demographics, use Meta Ads Manager. This form covers basic location and age targeting.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {error && (
