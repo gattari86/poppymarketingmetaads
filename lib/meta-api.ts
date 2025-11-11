@@ -472,6 +472,19 @@ export async function createAdCreative(
   try {
     const formattedId = formatAdAccountId(adAccountId);
 
+    // Normalize URL: ensure it has a protocol
+    const normalizeUrl = (url: string): string => {
+      const trimmed = url.trim();
+      // Check if URL already has a protocol
+      if (/^https?:\/\//.test(trimmed)) {
+        return trimmed;
+      }
+      // Add https:// if no protocol found
+      return `https://${trimmed}`;
+    };
+
+    const normalizedLink = normalizeUrl(data.link);
+
     // Meta API v24 creative creation using object_story_spec
     const creativeData: Record<string, any> = {
       name: data.name,
@@ -479,7 +492,7 @@ export async function createAdCreative(
         page_id: data.page_id,
         link_data: {
           image_hash: data.image_hash,
-          link: data.link,
+          link: normalizedLink,
           message: data.message,
           ...(data.headline && { name: data.headline }),
           ...(data.call_to_action_type && {
@@ -495,7 +508,8 @@ export async function createAdCreative(
       name: creativeData.name,
       pageId: data.page_id,
       imageHash: data.image_hash,
-      link: data.link,
+      link: normalizedLink,
+      linkOriginal: data.link,
     });
 
     const response = await metaApi.post(
