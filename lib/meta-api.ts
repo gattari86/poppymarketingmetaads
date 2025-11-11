@@ -143,40 +143,40 @@ export async function createAdSet(
   },
   accessToken: string
 ) {
+  // Meta API v24 CORRECT endpoint: POST /act_{ad_account_id}/adsets
+  // NOT /{campaignId}/adsets - that doesn't exist!
+  // campaign_id is sent in the request body, not in URL
+  const formattedAccountId = formatAdAccountId(adAccountId);
+
+  const adSetData: Record<string, any> = {
+    name: data.name,
+    campaign_id: campaignId, // REQUIRED: send campaign_id in body
+    status: data.status,
+    daily_budget: Math.round(data.daily_budget || 1000), // Ensure integer cents
+    targeting: data.targeting || {
+      geo_locations: [{ country: "US" }],
+    },
+    // REQUIRED: optimization_goal - what to optimize for
+    optimization_goal: data.optimization_goal || "REACH",
+    // REQUIRED: billing_event - when to charge (IMPRESSIONS, LINK_CLICKS, etc)
+    billing_event: data.billing_event || "IMPRESSIONS",
+    // RECOMMENDED: bid_amount - how much to bid per event (must be integer cents)
+    bid_amount: Math.round(data.bid_amount || 500), // Ensure integer cents
+  };
+
+  console.log("Creating ad set with v24 parameters:", {
+    accountId: formattedAccountId,
+    campaignId,
+    name: adSetData.name,
+    daily_budget: adSetData.daily_budget,
+    optimization_goal: adSetData.optimization_goal,
+    billing_event: adSetData.billing_event,
+    status: adSetData.status,
+    targeting: adSetData.targeting,
+    bid_amount: adSetData.bid_amount,
+  });
+
   try {
-    // Meta API v24 CORRECT endpoint: POST /act_{ad_account_id}/adsets
-    // NOT /{campaignId}/adsets - that doesn't exist!
-    // campaign_id is sent in the request body, not in URL
-    const formattedAccountId = formatAdAccountId(adAccountId);
-
-    const adSetData: Record<string, any> = {
-      name: data.name,
-      campaign_id: campaignId, // REQUIRED: send campaign_id in body
-      status: data.status,
-      daily_budget: Math.round(data.daily_budget || 1000), // Ensure integer cents
-      targeting: data.targeting || {
-        geo_locations: [{ country: "US" }],
-      },
-      // REQUIRED: optimization_goal - what to optimize for
-      optimization_goal: data.optimization_goal || "REACH",
-      // REQUIRED: billing_event - when to charge (IMPRESSIONS, LINK_CLICKS, etc)
-      billing_event: data.billing_event || "IMPRESSIONS",
-      // RECOMMENDED: bid_amount - how much to bid per event (must be integer cents)
-      bid_amount: Math.round(data.bid_amount || 500), // Ensure integer cents
-    };
-
-    console.log("Creating ad set with v24 parameters:", {
-      accountId: formattedAccountId,
-      campaignId,
-      name: adSetData.name,
-      daily_budget: adSetData.daily_budget,
-      optimization_goal: adSetData.optimization_goal,
-      billing_event: adSetData.billing_event,
-      status: adSetData.status,
-      targeting: adSetData.targeting,
-      bid_amount: adSetData.bid_amount,
-    });
-
     // Correct endpoint: POST /act_{ad_account_id}/adsets with campaign_id in body
     const response = await metaApi.post(`/${formattedAccountId}/adsets`, adSetData, {
       params: {
