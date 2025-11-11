@@ -17,7 +17,8 @@ export default function Support() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/support", {
+      // Submit to Formspree backend
+      const response = await fetch("https://formspree.io/f/mrbrgpwg", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -25,7 +26,6 @@ export default function Support() {
           email,
           subject,
           message,
-          submittedAt: new Date().toISOString(),
         }),
       });
 
@@ -35,6 +35,8 @@ export default function Support() {
         setEmail("");
         setSubject("");
         setMessage("");
+      } else {
+        console.error("Error submitting support request:", response.status);
       }
     } catch (error) {
       console.error("Error submitting support request:", error);
