@@ -32,6 +32,9 @@ export default function CreateAdModal({
   const [headline, setHeadline] = useState("");
   const [ctaType, setCtaType] = useState("LEARN_MORE");
 
+  // Local pageId state - can override if prop is empty
+  const [localPageId, setLocalPageId] = useState(pageId || "");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -53,7 +56,7 @@ export default function CreateAdModal({
         const formData = new FormData();
         formData.append("image", image);
         formData.append("adAccountId", String(adAccountId));
-        formData.append("pageId", String(pageId));
+        formData.append("pageId", String(localPageId || pageId));
         formData.append("creativeName", creativeName);
         formData.append("message", message);
         formData.append("link", link);
@@ -200,6 +203,25 @@ export default function CreateAdModal({
                 Internal reference only (not shown to users)
               </p>
             </div>
+
+            {/* Facebook Page ID - Always Visible if creating */}
+            {mode === "create" && (
+              <div className="space-y-2.5">
+                <label className="block text-sm md:text-base font-semibold text-gray-900">
+                  Facebook Page ID <span className="text-red-500 font-bold">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={localPageId}
+                  onChange={(e) => setLocalPageId(e.target.value)}
+                  placeholder="e.g., 123456789012345"
+                  className="w-full px-4 md:px-5 py-3 md:py-4 text-sm md:text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple focus:border-transparent transition-all"
+                />
+                <p className="text-xs md:text-sm text-gray-500">
+                  Your Facebook Page ID (auto-detected or set manually)
+                </p>
+              </div>
+            )}
 
             {/* CREATE NEW CREATIVE MODE */}
             {mode === "create" && (

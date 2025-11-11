@@ -29,8 +29,12 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
       try {
         console.log("📄 Fetching Facebook Pages...");
         const response = await fetch("/api/pages");
+
+        console.log("📄 Pages endpoint response status:", response.status);
+
         if (response.ok) {
           const data = await response.json();
+          console.log("📄 Pages data received:", data);
 
           // Auto-select first page if available
           if (data.pages && data.pages.length > 0) {
@@ -38,14 +42,41 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
             setPageId(firstPageId);
             localStorage.setItem("pageId", firstPageId);
             console.log("✅ Auto-selected first page:", firstPageId);
+          } else {
+            console.warn("⚠️ No pages returned from API");
+            // Fallback: check localStorage
+            const storedPageId = localStorage.getItem("pageId");
+            if (storedPageId) {
+              setPageId(storedPageId);
+              console.log("✅ Using stored pageId from localStorage:", storedPageId);
+            }
           }
         } else {
-          console.error("Failed to fetch pages");
-          toast.error("Failed to load Facebook Pages. Please check your Meta connection.");
+          console.error("❌ Pages endpoint failed with status:", response.status);
+          const errorData = await response.json().catch(() => ({}));
+          console.error("❌ Error response:", errorData);
+
+          // Fallback: check localStorage
+          const storedPageId = localStorage.getItem("pageId");
+          if (storedPageId) {
+            setPageId(storedPageId);
+            console.log("✅ Using stored pageId from localStorage:", storedPageId);
+            toast.info("Using saved Facebook Page ID from previous session");
+          } else {
+            toast.error("Please set your Facebook Page ID in the create ad dialog");
+          }
         }
       } catch (error) {
-        console.error("Error fetching pages:", error);
-        toast.error("Failed to load Facebook Pages");
+        console.error("❌ Error fetching pages:", error);
+
+        // Fallback: check localStorage
+        const storedPageId = localStorage.getItem("pageId");
+        if (storedPageId) {
+          setPageId(storedPageId);
+          console.log("✅ Using stored pageId from localStorage:", storedPageId);
+        } else {
+          console.warn("⚠️ No pageId available - user will need to set it");
+        }
       }
     };
 

@@ -18,11 +18,13 @@ export async function GET() {
     }
 
     console.log("📄 Fetching Facebook Pages for authenticated user");
+    console.log("📄 Access token available:", !!session.accessToken);
 
     // Fetch user's owned pages from Meta API
     // Using /me/accounts endpoint which returns all pages owned by the user
+    // This endpoint returns Facebook pages, Instagram business accounts, etc.
     const response = await axios.get(
-      `https://graph.instagram.com/v24.0/me/accounts`,
+      `https://graph.facebook.com/v24.0/me/accounts`,
       {
         params: {
           fields: "id,name,category,picture,access_token",
@@ -30,6 +32,8 @@ export async function GET() {
         },
       }
     );
+
+    console.log("📄 Meta API response:", response.status, response.data);
 
     const pages = response.data.data || [];
     console.log(`✅ Found ${pages.length} Facebook Pages`);
