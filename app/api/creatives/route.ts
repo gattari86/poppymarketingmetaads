@@ -136,12 +136,28 @@ export async function POST(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     console.error("❌ Fatal error in creatives route:", errorMessage);
 
+    // Try to extract Meta API error details if available
+    let metaErrorDetails = "";
+    if (error instanceof Error && error.message.includes("Request failed")) {
+      try {
+        // This is an axios error, try to get response data
+        const axiosError = error as any;
+        if (axiosError.response?.data?.error) {
+          metaErrorDetails = JSON.stringify(axiosError.response.data.error);
+          console.error("❌ Meta API error details:", metaErrorDetails);
+        }
+      } catch (parseError) {
+        // Silently fail if we can't extract details
+      }
+    }
+
     const statusCode = errorMessage.includes("401") ? 401 : 400;
 
     return NextResponse.json(
       {
         error: "Failed to create creative",
         details: errorMessage,
+        metaError: metaErrorDetails || undefined,
       },
       { status: statusCode }
     );

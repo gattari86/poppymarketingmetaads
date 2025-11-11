@@ -535,6 +535,17 @@ export async function createAdCreative(
     };
   } catch (error) {
     console.error("Error creating ad creative:", error);
+
+    // Log detailed error info for debugging
+    if (error instanceof Error) {
+      const axiosError = error as any;
+      if (axiosError.response?.data) {
+        console.error("❌ Meta API error response:", JSON.stringify(axiosError.response.data, null, 2));
+        console.error("❌ Status:", axiosError.response.status);
+        console.error("❌ Request payload was:", JSON.stringify(creativeData, null, 2));
+      }
+    }
+
     throw error;
   }
 }
