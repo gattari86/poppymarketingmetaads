@@ -424,6 +424,8 @@ export async function uploadAdImage(
   try {
     const formattedId = formatAdAccountId(adAccountId);
 
+    console.log("📤 Uploading image with filename:", filename);
+
     // Create FormData for multipart upload
     const FormData = require("form-data");
     const form = new FormData();
@@ -438,20 +440,36 @@ export async function uploadAdImage(
       }
     );
 
+    console.log("📤 Meta API upload response:", JSON.stringify(response.data, null, 2));
+
     // Response format: { images: { [filename]: { hash: "..." } } }
-    const imageData = response.data.images[filename];
+    // Meta may return images with different filenames, so check all returned images
+    let imageData = response.data.images[filename];
+
+    if (!imageData && response.data.images) {
+      // If exact filename not found, try to get the first/only image
+      const imageKeys = Object.keys(response.data.images);
+      console.log("⚠️ Exact filename not found. Available images:", imageKeys);
+      if (imageKeys.length > 0) {
+        imageData = response.data.images[imageKeys[0]];
+        console.log("✅ Using first available image:", imageKeys[0]);
+      }
+    }
+
     if (!imageData || !imageData.hash) {
+      console.error("❌ Upload response:", response.data);
       throw new Error("Failed to get image hash from response");
     }
 
-    console.log("Image uploaded successfully:", {
-      filename,
+    console.log("✅ Image uploaded successfully:", {
+      originalFilename: filename,
+      returnedKey: Object.keys(response.data.images)[0],
       hash: imageData.hash,
     });
 
     return imageData.hash;
   } catch (error) {
-    console.error("Error uploading ad image:", error);
+    console.error("❌ Error uploading ad image:", error);
     throw error;
   }
 }
@@ -537,14 +555,17 @@ export async function createAdCreative(
     console.error("Error creating ad creative:", error);
 
     // Log detailed error info for debugging
-    if (error instanceof Error) {
-      const axiosError = error as any;
-      if (axiosError.response?.data) {
-        console.error("❌ Meta API error response:", JSON.stringify(axiosError.response.data, null, 2));
-        console.error("❌ Status:", axiosError.response.status);
-        console.error("❌ Request payload was:", JSON.stringify(creativeData, null, 2));
-      }
+    const axiosError = error as any;
+    if (axiosError?.response?.data) {
+      console.error("❌ Meta API error response data:", axiosError.response.data);
+      console.error("❌ Meta API error object:", JSON.stringify(axiosError.response.data.error || axiosError.response.data, null, 2));
+      console.error("❌ HTTP Status:", axiosError.response.status);
     }
+    if (axiosError?.response?.statusText) {
+      console.error("❌ Status text:", axiosError.response.statusText);
+    }
+
+    console.error("❌ Request payload that failed:", JSON.stringify(creativeData, null, 2));
 
     throw error;
   }
