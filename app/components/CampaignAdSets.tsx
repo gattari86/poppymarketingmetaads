@@ -40,12 +40,15 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
           if (data.pages && data.pages.length > 0) {
             const firstPageId = data.pages[0].id;
             setPageId(firstPageId);
-            localStorage.setItem("pageId", firstPageId);
-            console.log("✅ Auto-selected first page:", firstPageId);
+            // Store pageId scoped to this ad account
+            const accountKey = `pageId_${adAccountId}`;
+            localStorage.setItem(accountKey, firstPageId);
+            console.log("✅ Auto-selected first page:", firstPageId, "for account:", adAccountId);
           } else {
             console.warn("⚠️ No pages returned from API");
-            // Fallback: check localStorage
-            const storedPageId = localStorage.getItem("pageId");
+            // Fallback: check localStorage for this specific account
+            const accountKey = `pageId_${adAccountId}`;
+            const storedPageId = localStorage.getItem(accountKey);
             if (storedPageId) {
               setPageId(storedPageId);
               console.log("✅ Using stored pageId from localStorage:", storedPageId);
@@ -56,8 +59,9 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
           const errorData = await response.json().catch(() => ({}));
           console.error("❌ Error response:", errorData);
 
-          // Fallback: check localStorage
-          const storedPageId = localStorage.getItem("pageId");
+          // Fallback: check localStorage for this specific account
+          const accountKey = `pageId_${adAccountId}`;
+          const storedPageId = localStorage.getItem(accountKey);
           if (storedPageId) {
             setPageId(storedPageId);
             console.log("✅ Using stored pageId from localStorage:", storedPageId);
@@ -69,8 +73,9 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
       } catch (error) {
         console.error("❌ Error fetching pages:", error);
 
-        // Fallback: check localStorage
-        const storedPageId = localStorage.getItem("pageId");
+        // Fallback: check localStorage for this specific account
+        const accountKey = `pageId_${adAccountId}`;
+        const storedPageId = localStorage.getItem(accountKey);
         if (storedPageId) {
           setPageId(storedPageId);
           console.log("✅ Using stored pageId from localStorage:", storedPageId);
@@ -81,7 +86,7 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
     };
 
     fetchPages();
-  }, []);
+  }, [adAccountId]);
 
   // Debug: Log the account ID
   useEffect(() => {
