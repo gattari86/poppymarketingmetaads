@@ -9,7 +9,7 @@ import type { Campaign } from "@/lib/types";
 import CreateCampaignModal from "@/app/components/CreateCampaignModal";
 import CampaignAdSets from "@/app/components/CampaignAdSets";
 import { CampaignsListSkeleton } from "@/app/components/SkeletonLoaders";
-import { formatObjective, formatRelativeTime, formatDateWithRelative, debounce } from "@/lib/utils";
+import { formatObjective, formatRelativeTime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -361,7 +361,7 @@ function CampaignsContent() {
                             <div>
                               <span className="text-gray-500 text-xs block mb-1">Daily Budget</span>
                               <p className="font-semibold text-gray-800">
-                                ${(parseFloat(campaign.daily_budget) / 100).toFixed(2)}
+                                ${(parseFloat(String(campaign.daily_budget)) / 100).toFixed(2)}
                               </p>
                             </div>
                           )}

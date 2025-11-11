@@ -121,7 +121,7 @@ export default function CampaignAdSets({ campaign }: CampaignAdSetsProps) {
                     </div>
                     {adSet.daily_budget && (
                       <p className="text-xs text-gray-500">
-                        Budget: ${(parseFloat(adSet.daily_budget) / 100).toFixed(2)}/day
+                        Budget: ${(parseFloat(String(adSet.daily_budget)) / 100).toFixed(2)}/day
                       </p>
                     )}
                   </div>

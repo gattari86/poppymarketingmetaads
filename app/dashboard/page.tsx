@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import type { AdAccount } from "@/lib/types";
-import { DashboardSkeleton, MetricCardSkeleton, AccountCardSkeleton } from "@/app/components/SkeletonLoaders";
+import { DashboardSkeleton, MetricCardSkeleton } from "@/app/components/SkeletonLoaders";
 
 export const dynamic = "force-dynamic";
 
