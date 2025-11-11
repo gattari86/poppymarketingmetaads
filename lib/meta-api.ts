@@ -163,7 +163,9 @@ export async function createAdSet(
     name: data.name,
     campaign_id: campaignId, // REQUIRED: send campaign_id in body
     status: data.status,
-    daily_budget: Math.round(data.daily_budget || 1000), // Ensure integer cents
+    // NOTE: Do NOT include daily_budget here!
+    // Meta v24 uses either campaign-level OR ad set-level budgets, not both
+    // If campaign has a budget, ad sets inherit it and cannot have their own
     targeting: data.targeting || defaultTargeting,
     // REQUIRED: optimization_goal - what to optimize for
     optimization_goal: data.optimization_goal || "REACH",

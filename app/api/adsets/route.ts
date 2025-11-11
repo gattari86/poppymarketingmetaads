@@ -117,7 +117,8 @@ export async function POST(request: Request) {
       name: body.name,
       campaign_id: campaignId,
       status: body.status || "PAUSED",
-      daily_budget: body.daily_budget,
+      // Note: daily_budget is NOT set at ad set level when campaign has a budget
+      // Ad sets inherit the campaign's budget
       targeting: body.targeting,
       created_time: new Date().toISOString(),
       updated_time: new Date().toISOString(),

@@ -17,12 +17,12 @@ export default function CreateAdSetModal({
   onSuccess,
 }: CreateAdSetModalProps) {
   const [name, setName] = useState("");
-  const [dailyBudget, setDailyBudget] = useState("10");
   const [optimizationGoal, setOptimizationGoal] = useState("REACH");
   const [billingEvent, setBillingEvent] = useState("IMPRESSIONS");
   const [bidAmount, setBidAmount] = useState("0.05");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showBudgetWarning] = useState(true);
 
   // Debug: Log the IDs
   useEffect(() => {
@@ -39,15 +39,11 @@ export default function CreateAdSetModal({
 
     try {
       if (!name.trim()) throw new Error("Ad set name is required");
-      if (!dailyBudget || parseFloat(dailyBudget) <= 0) {
-        throw new Error("Daily budget must be greater than 0");
-      }
       if (!bidAmount || parseFloat(bidAmount) <= 0) {
         throw new Error("Bid amount must be greater than 0");
       }
 
-      // Convert to integers (Meta API requires cents as integers, not floats)
-      const dailyBudgetCents = Math.round(parseFloat(dailyBudget) * 100);
+      // Convert bid amount to integers (Meta API requires cents as integers, not floats)
       const bidAmountCents = Math.round(parseFloat(bidAmount) * 100);
 
       const response = await fetch(`/api/adsets?adAccountId=${adAccountId}&campaignId=${campaignId}`, {
@@ -55,7 +51,9 @@ export default function CreateAdSetModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
-          daily_budget: dailyBudgetCents, // Meta API expects cents as integer
+          // NOTE: Do NOT include daily_budget here!
+          // Meta v24 uses either campaign-level OR ad set-level budgets, not both
+          // Since this campaign has a budget, ad sets must not have their own budget
           status: "PAUSED",
           optimization_goal: optimizationGoal,
           billing_event: billingEvent,
@@ -121,28 +119,21 @@ export default function CreateAdSetModal({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Daily Budget (USD)
-            </label>
-            <div className="flex items-center">
-              <span className="text-gray-700 font-medium mr-2">$</span>
-              <input
-                type="number"
-                value={dailyBudget}
-                onChange={(e) => setDailyBudget(e.target.value)}
-                placeholder="10.00"
-                min="0.01"
-                step="0.01"
-                required
-                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
-              />
-              <span className="text-gray-500 text-sm ml-2">/day</span>
+          {showBudgetWarning && (
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex gap-3">
+                <div className="text-blue-600 text-lg">ℹ️</div>
+                <div>
+                  <p className="text-sm font-medium text-blue-900 mb-1">
+                    Budget Set at Campaign Level
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    Your campaign has a daily budget. Ad sets inherit this budget automatically. You don't need to set a separate budget for each ad set.
+                  </p>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Minimum daily budget is usually $1.00
-            </p>
-          </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
