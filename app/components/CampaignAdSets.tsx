@@ -269,11 +269,6 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
                         {adSet.status}
                       </span>
                     </div>
-                    {adSet.daily_budget && (
-                      <p className="text-xs text-gray-500">
-                        Budget: ${(parseFloat(String(adSet.daily_budget)) / 100).toFixed(2)}/day
-                      </p>
-                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {/* Status toggle button */}
