@@ -41,7 +41,6 @@ export default function CreateAdSetModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
-          campaign_id: campaignId,
           daily_budget: parseFloat(dailyBudget) * 100, // Meta API expects cents
           status: "PAUSED",
           optimization_goal: optimizationGoal,

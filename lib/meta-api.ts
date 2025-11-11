@@ -144,9 +144,9 @@ export async function createAdSet(
 ) {
   try {
     // Meta API v24 requires specific parameters for ad set creation
+    // NOTE: When posting to /campaignId/adsets, do NOT send campaign_id in body - it's already in URL
     const adSetData: Record<string, any> = {
       name: data.name,
-      campaign_id: campaignId,
       status: data.status,
       daily_budget: data.daily_budget || 1000, // Default $10/day in cents
       targeting: data.targeting || {
@@ -166,11 +166,10 @@ export async function createAdSet(
       daily_budget: adSetData.daily_budget,
       optimization_goal: adSetData.optimization_goal,
       billing_event: adSetData.billing_event,
-      campaign_id: adSetData.campaign_id,
+      status: adSetData.status,
     });
 
-    // Note: Campaign must be in ACTIVE status to create ad sets
-    // If you get "Object with ID does not exist" error, activate the campaign first
+    // Post to /campaignId/adsets - campaign_id is in URL, not in body
     const response = await metaApi.post(`/${campaignId}/adsets`, adSetData, {
       params: {
         access_token: accessToken,
@@ -179,7 +178,6 @@ export async function createAdSet(
     return response.data;
   } catch (error) {
     console.error("Error creating ad set:", error);
-    console.error("Make sure the campaign is in ACTIVE status before creating ad sets");
     throw error;
   }
 }
