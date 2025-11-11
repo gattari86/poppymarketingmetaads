@@ -105,12 +105,12 @@ export default function CreateAdSetModal({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-2xl font-poppins font-semibold text-gray-900 mb-6">
+      <div className="modal-content flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-2xl font-poppins font-semibold text-gray-900 mb-6 flex-shrink-0">
           Create Ad Set
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-2">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Ad Set Name
@@ -289,24 +289,25 @@ export default function CreateAdSetModal({
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
-
-          <div className="flex gap-3 pt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-outline flex-1"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !name}
-              className="btn-primary flex-1 disabled:opacity-50"
-            >
-              {loading ? "Creating..." : "Create Ad Set"}
-            </button>
-          </div>
         </form>
+
+        <div className="flex gap-3 pt-4 mt-6 border-t border-gray-200 flex-shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-outline flex-1"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading || !name}
+            onClick={handleSubmit}
+            className="btn-primary flex-1 disabled:opacity-50"
+          >
+            {loading ? "Creating..." : "Create Ad Set"}
+          </button>
+        </div>
       </div>
     </div>
   );
