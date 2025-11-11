@@ -392,14 +392,20 @@ function CampaignsContent() {
                               {formatRelativeTime(campaign.created_time)}
                             </p>
                           </div>
-                          {campaign.daily_budget && (
-                            <div>
-                              <span className="text-gray-500 text-xs block mb-1">Daily Budget</span>
+                          <div>
+                            <span className="text-gray-500 text-xs block mb-1">Budget</span>
+                            {campaign.daily_budget ? (
                               <p className="font-semibold text-gray-800">
-                                ${(parseFloat(String(campaign.daily_budget)) / 100).toFixed(2)}
+                                ${(parseFloat(String(campaign.daily_budget)) / 100).toFixed(2)}/day
                               </p>
-                            </div>
-                          )}
+                            ) : campaign.lifetime_budget ? (
+                              <p className="font-semibold text-gray-800">
+                                ${(parseFloat(String(campaign.lifetime_budget)) / 100).toFixed(2)} lifetime
+                              </p>
+                            ) : (
+                              <p className="font-semibold text-amber-600">Not set</p>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">

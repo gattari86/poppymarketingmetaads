@@ -1,0 +1,393 @@
+================================================================================
+META MARKETING API V24 - AUTOMATED RULES DOCUMENTATION
+Complete Technical Reference & Implementation Guide
+================================================================================
+
+DOCUMENTATION SUITE CREATED:
+----------------------------
+
+1. META_AD_RULES_README.md (8 KB)
+   - Master navigation guide
+   - Quick start instructions
+   - Common use cases
+   - Troubleshooting guide
+
+2. META_AD_RULES_V24_COMPLETE_REFERENCE.md (21 KB)
+   - Full API specification
+   - All 18 execution types
+   - 12 operators with descriptions
+   - 70+ metrics reference
+   - Python & JavaScript SDK examples
+   - Best practices for 2025
+   - Error handling guide
+
+3. META_AD_RULES_QUICK_REFERENCE.md (6 KB)
+   - One-page cheat sheet
+   - Operator quick lookup
+   - Common patterns
+   - Time presets list
+   - API endpoint summary
+
+4. META_AD_RULES_IMPLEMENTATION_PATTERNS.md (21 KB)
+   - 20+ production-ready examples
+   - 8 pattern categories
+   - Real-world use cases
+   - Testing workflow
+   - Common mistakes to avoid
+
+================================================================================
+KEY FINDINGS - EXECUTION TYPES (18 AVAILABLE)
+================================================================================
+
+BUDGET & BIDDING (6):
+  - CHANGE_BID                    Modify bid amount
+  - CHANGE_BUDGET                 Adjust ad set budget
+  - CHANGE_CAMPAIGN_BUDGET        Adjust campaign budget
+  - REBALANCE_BUDGET              Redistribute budget
+  - UPDATE_LAX_BUDGET             Update flexible budget
+  - UPDATE_LAX_DURATION           Update flexible duration
+
+CAMPAIGN MANAGEMENT (5):
+  - PAUSE                         Pause entity
+  - UNPAUSE                       Resume entity
+  - ROTATE                        Rotate ads
+  - UPDATE_CREATIVE               Change creative
+  - DCO                           Dynamic Creative Optimization
+
+AUDIENCE OPERATIONS (5):
+  - ADD_INTEREST_RELAXATION       Broaden interest targeting
+  - ADD_QUESTIONNAIRE_INTERESTS   Add questionnaire interests
+  - AUDIENCE_CONSOLIDATION        Merge audiences
+  - AUDIENCE_CONSOLIDATION_ASK_FIRST  Request approval first
+  - INCREASE_RADIUS               Expand geo-targeting
+
+SYSTEM FUNCTIONS (3):
+  - NOTIFICATION                  Send alert only
+  - PING_ENDPOINT                 Webhook notification
+  - AD_RECOMMENDATION_APPLY       Apply Meta recommendations
+
+================================================================================
+OPERATORS (12 AVAILABLE)
+================================================================================
+
+COMPARISON:
+  - EQUAL                         Exact match
+  - NOT_EQUAL                     Not equal
+  - GREATER_THAN                  Numeric greater than
+  - LESS_THAN                     Numeric less than
+
+SET OPERATIONS:
+  - IN                            Value in list
+  - NOT_IN                        Value not in list
+  - IN_RANGE                      Between min/max
+  - NOT_IN_RANGE                  Outside range
+
+STRING OPERATIONS:
+  - CONTAIN                       String contains substring
+  - NOT_CONTAIN                   String doesn't contain
+
+LOGICAL:
+  - ALL                           Logical AND
+  - ANY                           Logical OR
+  - NONE                          Logical NOT
+
+================================================================================
+EVALUATION TYPES
+================================================================================
+
+SCHEDULE:
+  - Time-based evaluation
+  - Runs on set intervals: DAILY, HOURLY, SEMI_HOURLY, CUSTOM
+  - Predictable execution
+
+TRIGGER:
+  - Event-based evaluation
+  - Fires when conditions change
+  - Five trigger types:
+    * STATS_CHANGE              Metric value changes
+    * STATS_MILESTONE           Threshold reached
+    * METADATA_CREATION         New entity created
+    * METADATA_UPDATE           Entity modified
+    * DELIVERY_INSIGHTS_CHANGE  Delivery metric changes
+
+================================================================================
+COMMON METRICS (70+ AVAILABLE)
+================================================================================
+
+COST METRICS:
+  - spend, cpc, cpm, cpp, cost_per_conversion
+
+PERFORMANCE:
+  - impressions, reach, clicks, conversions, roas, ctr
+
+ENGAGEMENT:
+  - frequency, post_engagement, video_views
+
+CONVERSION:
+  - conversion_rate, cost_per_conversion
+
+VIDEO:
+  - video_view_rate, video_p25/50/75/100_watched
+
+DEMOGRAPHICS (with breakdowns):
+  - age, gender, country, region, device_platform, placement
+
+================================================================================
+TIME PRESETS (17 OPTIONS)
+================================================================================
+
+  today, yesterday
+  last_3d, last_7d, last_14d, last_28d, last_30d, last_90d
+  this_week_mon_today, this_week_sun_today
+  last_week_mon_sun, last_week_sun_sat
+  this_month, last_month
+  this_quarter, last_quarter
+  this_year, last_year
+  lifetime
+
+================================================================================
+MOST COMMON USE CASES
+================================================================================
+
+1. PAUSE HIGH-CPC ADS
+   - Pattern: 1.1 in Implementation Patterns
+   - Execution Type: PAUSE
+   - Key Filters: cpc > threshold, impressions > 1000
+
+2. SCALE HIGH ROAS AD SETS
+   - Pattern: 2.1 in Implementation Patterns
+   - Execution Type: CHANGE_BUDGET
+   - Key Filters: roas > 3, spend > 50
+
+3. BUDGET ALERTS
+   - Pattern: 3.1 in Implementation Patterns
+   - Execution Type: NOTIFICATION
+   - Key Filters: spend > 80% of budget
+
+4. LEARNING PHASE PROTECTION
+   - Pattern: 4.1 in Implementation Patterns
+   - Execution Type: NOTIFICATION
+   - Key Filters: conversions < 50, spend > threshold
+
+5. PAUSE LOW PERFORMERS
+   - Pattern: 1.2 in Implementation Patterns
+   - Execution Type: PAUSE
+   - Key Filters: cpa > max_acceptable, spend > minimum
+
+================================================================================
+RULE STRUCTURE TEMPLATE
+================================================================================
+
+{
+  "name": "Rule Name",
+  "status": "ENABLED",
+  "evaluation_spec": {
+    "evaluation_type": "SCHEDULE",
+    "filters": [
+      {
+        "field": "metric_name",
+        "operator": "GREATER_THAN",
+        "value": 100
+      }
+    ]
+  },
+  "execution_spec": {
+    "execution_type": "PAUSE",
+    "execution_options": [
+      {
+        "field": "option_field",
+        "operator": "EQUAL",
+        "value": "option_value"
+      }
+    ]
+  },
+  "schedule_spec": {
+    "schedule_type": "DAILY",
+    "start_time": "09:00"
+  }
+}
+
+================================================================================
+API ENDPOINTS (v24)
+================================================================================
+
+CREATE:    POST   /act_{account_id}/adrules_library
+GET:       GET    /{rule_id}
+UPDATE:    POST   /{rule_id}
+DELETE:    DELETE /{rule_id}
+EXECUTE:   POST   /{rule_id}/execute
+PREVIEW:   POST   /{rule_id}/preview
+HISTORY:   GET    /{rule_id}/history
+
+================================================================================
+BEST PRACTICES SUMMARY
+================================================================================
+
+CONFIGURATION:
+  ✓ Start with NOTIFICATION rules to test logic
+  ✓ Set minimum impression thresholds (500-1000+)
+  ✓ Use appropriate time_preset for your data
+  ✓ Respect 50-conversion learning phase
+  ✓ Avoid conflicting rules
+
+EXECUTION:
+  ✓ Use preview mode before enabling
+  ✓ Test on 1-2 campaigns first
+  ✓ Monitor rule history daily (first week)
+  ✓ Incremental budget changes (10-20%)
+  ✓ Document rule intent and thresholds
+
+OPTIMIZATION:
+  ✓ Match rules to campaign objectives
+  ✓ Adjust thresholds based on performance
+  ✓ Archive underperforming rules
+  ✓ Use webhooks for critical alerts
+  ✓ Review and update monthly
+
+================================================================================
+WHAT'S NEW IN V24
+================================================================================
+
+NEW FEATURES:
+  - Better Advantage+ campaign compatibility
+  - Enhanced attribution window support
+  - Automatic placement distribution awareness
+  - Improved event quality signal processing
+
+DEPRECATED:
+  - Legacy ASC/AAC API support (use v23 for legacy campaigns)
+  - Some manual placement options
+
+UNCHANGED:
+  - Core rule structure (evaluation_spec, execution_spec)
+  - All 18 execution types
+  - All 12 operators
+  - API endpoints structure
+
+================================================================================
+IMPLEMENTATION WORKFLOW
+================================================================================
+
+STEP 1: TEST WITH NOTIFICATION
+  - Create rule with execution_type: "NOTIFICATION"
+  - Verify filter logic triggers correctly
+  - Review what entities would be affected
+
+STEP 2: USE PREVIEW MODE
+  - Call rule.create_preview() via API
+  - Check number of affected entities
+  - Validate it matches expectations
+
+STEP 3: PILOT ON SUBSET
+  - Add campaign ID filter
+  - Enable on 1-2 test campaigns
+  - Monitor for 3-7 days
+
+STEP 4: MONITOR PERFORMANCE
+  - Check rule history daily
+  - Review execution results
+  - Adjust thresholds if needed
+
+STEP 5: SCALE TO PRODUCTION
+  - Remove campaign ID filter
+  - Enable across all campaigns
+  - Continue regular monitoring
+
+================================================================================
+COMMON ERRORS & SOLUTIONS
+================================================================================
+
+RULE NOT TRIGGERING:
+  → Check status is ENABLED
+  → Verify thresholds are being met
+  → Ensure sufficient data (impressions/spend)
+  → Review time_preset window
+
+RULE TRIGGERING TOO OFTEN:
+  → Increase thresholds
+  → Add more filter conditions
+  → Change TRIGGER to SCHEDULE
+  → Add minimum impression requirement
+
+EXECUTION FAILS:
+  → Verify account has sufficient budget
+  → Check campaign/ad set is ACTIVE
+  → Validate execution_type for entity_type
+  → Review execution_options fields
+
+================================================================================
+SDK EXAMPLES
+================================================================================
+
+PYTHON:
+  from facebook_business.adobjects.adaccount import AdAccount
+  account = AdAccount('act_ACCOUNT_ID')
+  rule = account.create_ad_rule(params={...})
+
+JAVASCRIPT:
+  const account = new AdAccount(account_id);
+  account.createAdRule([], ruleData)
+    .then((result) => console.log(result.id));
+
+EXECUTE RULE:
+  Python:     AdRule(rule_id).create_execute()
+  JavaScript: new AdRule(rule_id).createExecute()
+
+PREVIEW RULE:
+  Python:     preview = AdRule(rule_id).create_preview()
+  JavaScript: new AdRule(rule_id).createPreview()
+
+================================================================================
+DOCUMENTATION SOURCES
+================================================================================
+
+1. Facebook Python Business SDK (Official)
+   https://github.com/facebook/facebook-python-business-sdk
+
+2. Meta Marketing API Documentation
+   https://developers.facebook.com/docs/marketing-api/
+
+3. Ad Rules Engine Guide
+   https://developers.facebook.com/docs/marketing-api/ad-rules/
+
+4. API Reference v24
+   https://developers.facebook.com/docs/marketing-api/reference/ad-rule/
+
+================================================================================
+DOCUMENTATION STATISTICS
+================================================================================
+
+Total Files:         4
+Total Size:          ~56 KB
+Execution Types:     18
+Operators:           12
+Available Metrics:   70+
+Time Presets:        17
+Example Rules:       20+
+Pattern Categories:  8
+Code Examples:       Python, JavaScript
+
+API Version:         Meta Marketing API v24.0
+Last Updated:        January 2025
+Status:              Production Ready
+
+================================================================================
+QUICK START COMMAND
+================================================================================
+
+To view documentation:
+  cd /Users/ricardogattas-moras/poppy-ads-manager
+  open META_AD_RULES_README.md
+
+For quick reference:
+  open META_AD_RULES_QUICK_REFERENCE.md
+
+For examples:
+  open META_AD_RULES_IMPLEMENTATION_PATTERNS.md
+
+For complete API details:
+  open META_AD_RULES_V24_COMPLETE_REFERENCE.md
+
+================================================================================
+END OF SUMMARY
+================================================================================

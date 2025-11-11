@@ -7,9 +7,11 @@ import CreateAdModal from "./CreateAdModal";
 
 interface AdSetAdsProps {
   adSet: AdSet;
+  adAccountId: string;
+  pageId: string;
 }
 
-export default function AdSetAds({ adSet }: AdSetAdsProps) {
+export default function AdSetAds({ adSet, adAccountId, pageId }: AdSetAdsProps) {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -103,6 +105,8 @@ export default function AdSetAds({ adSet }: AdSetAdsProps) {
       {showCreateModal && (
         <CreateAdModal
           adSetId={adSet.id}
+          adAccountId={adAccountId}
+          pageId={pageId}
           onClose={() => setShowCreateModal(false)}
           onSuccess={handleAdCreated}
         />

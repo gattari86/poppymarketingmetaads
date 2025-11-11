@@ -5,19 +5,32 @@ import type { Ad } from "@/lib/types";
 
 interface CreateAdModalProps {
   adSetId: string;
+  adAccountId: string;
+  pageId: string;
   onClose: () => void;
   onSuccess: (ad: Ad) => void;
 }
 
 export default function CreateAdModal({
   adSetId,
+  adAccountId,
+  pageId,
   onClose,
   onSuccess,
 }: CreateAdModalProps) {
-  const [name, setName] = useState("");
+  const [mode, setMode] = useState<"create" | "existing">("create");
+  const [adName, setAdName] = useState("");
   const [creativeId, setCreativeId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Creative creation fields
+  const [image, setImage] = useState<File | null>(null);
+  const [creativeName, setCreativeName] = useState("");
+  const [message, setMessage] = useState("");
+  const [link, setLink] = useState("");
+  const [headline, setHeadline] = useState("");
+  const [ctaType, setCtaType] = useState("LEARN_MORE");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,40 +38,73 @@ export default function CreateAdModal({
     setError("");
 
     try {
-      if (!name.trim()) throw new Error("Ad name is required");
-      if (!creativeId.trim()) throw new Error("Creative ID is required");
+      if (!adName.trim()) throw new Error("Ad name is required");
 
-      // Per Meta API v24: creative object only accepts creative_id
-      // Creatives must be created via API or exist in Meta Ads Manager
-      const requestBody = {
-        name: name.trim(),
+      let finalCreativeId = creativeId;
+
+      // If creating new creative, do that first
+      if (mode === "create") {
+        if (!image) throw new Error("Image is required");
+        if (!creativeName.trim()) throw new Error("Creative name is required");
+        if (!message.trim()) throw new Error("Ad message/body text is required");
+        if (!link.trim()) throw new Error("Landing page URL is required");
+
+        // Create creative first
+        const formData = new FormData();
+        formData.append("image", image);
+        formData.append("adAccountId", adAccountId);
+        formData.append("pageId", pageId);
+        formData.append("creativeName", creativeName);
+        formData.append("message", message);
+        formData.append("link", link);
+        if (headline) formData.append("headline", headline);
+        if (ctaType) formData.append("ctaType", ctaType);
+
+        const creativeResponse = await fetch("/api/creatives", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!creativeResponse.ok) {
+          const creativeError = await creativeResponse.json().catch(() => ({}));
+          throw new Error(creativeError.details || "Failed to create creative");
+        }
+
+        const creativeData = await creativeResponse.json();
+        finalCreativeId = creativeData.creative.id;
+      } else {
+        if (!creativeId.trim()) throw new Error("Creative ID is required");
+      }
+
+      // Now create the ad with the creative ID
+      const adRequestBody = {
+        name: adName.trim(),
         adset_id: adSetId,
-        status: "PAUSED", // Meta v24 requires status to be set
+        status: "PAUSED",
         creative: {
-          creative_id: creativeId.trim(),
+          creative_id: finalCreativeId,
         },
       };
 
-      const response = await fetch(`/api/ads?adSetId=${adSetId}`, {
+      const adResponse = await fetch(`/api/ads?adSetId=${adSetId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(adRequestBody),
       });
 
-      if (!response.ok) {
+      if (!adResponse.ok) {
         let errorMessage = "Failed to create ad";
         try {
-          const errorData = await response.json();
+          const errorData = await adResponse.json();
           errorMessage = errorData.error || errorData.message || errorMessage;
         } catch {
-          // If response isn't JSON, use the status text
-          errorMessage = response.statusText || errorMessage;
+          errorMessage = adResponse.statusText || errorMessage;
         }
         throw new Error(errorMessage);
       }
 
-      const data = await response.json();
-      onSuccess(data);
+      const adData = await adResponse.json();
+      onSuccess(adData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -76,28 +122,42 @@ export default function CreateAdModal({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-2">
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-            <p className="text-sm font-medium text-amber-900 mb-2">
-              ⚠️ Coming Soon: Image Upload
-            </p>
-            <p className="text-xs text-amber-800 mb-2">
-              We're building a feature to upload images and create creatives directly in Poppy. For now, please use the Creative ID option below.
-            </p>
-            <p className="text-xs text-amber-700">
-              <strong>Temporary Workaround:</strong> You can create a creative in Meta Ads Manager and reference its ID here. A detailed guide is available below.
-            </p>
+          {/* Mode selector */}
+          <div className="flex gap-3 bg-gray-50 p-3 rounded-lg">
+            <button
+              type="button"
+              onClick={() => setMode("create")}
+              className={`flex-1 py-2 px-3 rounded-md font-medium text-sm transition-all ${
+                mode === "create"
+                  ? "bg-poppy-dark-purple text-white"
+                  : "bg-white text-gray-700 border border-gray-200"
+              }`}
+            >
+              Create New Creative
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("existing")}
+              className={`flex-1 py-2 px-3 rounded-md font-medium text-sm transition-all ${
+                mode === "existing"
+                  ? "bg-poppy-dark-purple text-white"
+                  : "bg-white text-gray-700 border border-gray-200"
+              }`}
+            >
+              Use Existing Creative
+            </button>
           </div>
 
+          {/* Common ad name field */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Ad Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={adName}
+              onChange={(e) => setAdName(e.target.value)}
               placeholder="e.g., Summer Sale - Version A"
-              required
               className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
             />
             <p className="text-xs text-gray-500 mt-1">
@@ -105,31 +165,151 @@ export default function CreateAdModal({
             </p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Creative ID <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={creativeId}
-              onChange={(e) => setCreativeId(e.target.value)}
-              placeholder="e.g., 123456789012345"
-              required
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
-            />
-          </div>
+          {/* CREATE NEW CREATIVE MODE */}
+          {mode === "create" && (
+            <>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-sm font-medium text-green-900">
+                  ✨ Create Creative Right Here
+                </p>
+                <p className="text-xs text-green-800 mt-1">
+                  Upload your image and enter ad copy. We'll create the creative in Meta and use it for this ad.
+                </p>
+              </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm font-medium text-blue-900 mb-3">How to Find Your Creative ID:</p>
-            <ol className="text-xs text-blue-800 space-y-2 ml-4 list-decimal">
-              <li>Go to <strong>Meta Ads Manager</strong> (ads.facebook.com)</li>
-              <li>Click <strong>Assets</strong> in the left sidebar</li>
-              <li>Select <strong>Creatives</strong> (under Creative Library)</li>
-              <li>Find the creative you want to use</li>
-              <li>The <strong>Creative ID is displayed in the creative details</strong> - it looks like a long number (e.g., 120234882987030293)</li>
-              <li>Copy and paste it above</li>
-            </ol>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Image <span className="text-red-500">*</span>
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-poppy-dark-purple transition-colors"
+                  onClick={() => document.getElementById("imageInput")?.click()}
+                >
+                  {image ? (
+                    <div className="text-sm">
+                      <p className="font-medium text-gray-900">{image.name}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {(image.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-gray-600 font-medium">Click to upload or drag and drop</p>
+                      <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF (Max 30MB)</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  id="imageInput"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setImage(e.target.files?.[0] || null)}
+                  className="hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Creative Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={creativeName}
+                  onChange={(e) => setCreativeName(e.target.value)}
+                  placeholder="e.g., Summer Sale Hero Image"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ad Copy / Message <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="e.g., Shop our summer collection and save 20%!"
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Headline <span className="text-gray-400">(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={headline}
+                  onChange={(e) => setHeadline(e.target.value)}
+                  placeholder="e.g., Summer Sale - 20% Off"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Landing Page URL <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={link}
+                    onChange={(e) => setLink(e.target.value)}
+                    placeholder="https://yoursite.com"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Call-to-Action Button
+                  </label>
+                  <select
+                    value={ctaType}
+                    onChange={(e) => setCtaType(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                  >
+                    <option value="LEARN_MORE">Learn More</option>
+                    <option value="SHOP_NOW">Shop Now</option>
+                    <option value="GET_OFFER">Get Offer</option>
+                    <option value="CONTACT_US">Contact Us</option>
+                    <option value="SIGN_UP">Sign Up</option>
+                    <option value="DOWNLOAD">Download</option>
+                  </select>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* USE EXISTING CREATIVE MODE */}
+          {mode === "existing" && (
+            <>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm font-medium text-blue-900 mb-1">
+                  Use an Existing Creative
+                </p>
+                <p className="text-xs text-blue-800">
+                  Reference a creative you've already created in Meta Ads Manager or with Poppy.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Creative ID <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={creativeId}
+                  onChange={(e) => setCreativeId(e.target.value)}
+                  placeholder="e.g., 123456789012345"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  The ID returned when you created a creative via Poppy or the Meta API
+                </p>
+              </div>
+            </>
+          )}
 
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
@@ -148,7 +328,7 @@ export default function CreateAdModal({
           </button>
           <button
             type="submit"
-            disabled={loading || !name || !creativeId}
+            disabled={loading || !adName || (mode === "create" && (!image || !creativeName || !message || !link)) || (mode === "existing" && !creativeId)}
             onClick={handleSubmit}
             className="btn-primary flex-1 disabled:opacity-50"
           >

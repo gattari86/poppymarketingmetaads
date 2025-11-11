@@ -1,0 +1,268 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    META AD RULES v24 - VISUAL QUICK GUIDE                    ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📚 DOCUMENTATION FILES                                                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  [START HERE] → META_AD_RULES_README.md                                     │
+│                 ├─ Navigation guide                                          │
+│                 ├─ Quick start                                               │
+│                 └─ Use case finder                                           │
+│                                                                              │
+│  [REFERENCE] → META_AD_RULES_V24_COMPLETE_REFERENCE.md                      │
+│                ├─ 18 execution types                                         │
+│                ├─ 12 operators                                               │
+│                ├─ 70+ metrics                                                │
+│                └─ SDK examples                                               │
+│                                                                              │
+│  [CHEAT SHEET] → META_AD_RULES_QUICK_REFERENCE.md                           │
+│                  ├─ One-page lookup                                          │
+│                  ├─ Common patterns                                          │
+│                  └─ API endpoints                                            │
+│                                                                              │
+│  [EXAMPLES] → META_AD_RULES_IMPLEMENTATION_PATTERNS.md                      │
+│               ├─ 20+ real-world rules                                        │
+│               ├─ 8 pattern categories                                        │
+│               └─ Testing workflow                                            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🎯 EXECUTION TYPES (18)                                                      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  💰 BUDGET & BIDDING                                                         │
+│     ├─ CHANGE_BID                  📊 Modify bid amount                     │
+│     ├─ CHANGE_BUDGET               📈 Adjust ad set budget                  │
+│     ├─ CHANGE_CAMPAIGN_BUDGET      📉 Adjust campaign budget                │
+│     ├─ REBALANCE_BUDGET            ⚖️  Redistribute budget                   │
+│     ├─ UPDATE_LAX_BUDGET           🔄 Update flexible budget                │
+│     └─ UPDATE_LAX_DURATION         ⏱️  Update flexible duration              │
+│                                                                              │
+│  🎮 CAMPAIGN MANAGEMENT                                                      │
+│     ├─ PAUSE                       ⏸️  Pause entity                          │
+│     ├─ UNPAUSE                     ▶️  Resume entity                         │
+│     ├─ ROTATE                      🔄 Rotate ads                            │
+│     ├─ UPDATE_CREATIVE             🎨 Change creative                       │
+│     └─ DCO                         ✨ Dynamic Creative Optimization         │
+│                                                                              │
+│  👥 AUDIENCE OPERATIONS                                                      │
+│     ├─ ADD_INTEREST_RELAXATION     🎯 Broaden interest targeting            │
+│     ├─ ADD_QUESTIONNAIRE_INTERESTS ❓ Add questionnaire interests           │
+│     ├─ AUDIENCE_CONSOLIDATION      🔀 Merge audiences                       │
+│     ├─ AUDIENCE_CONSOLIDATION...   ✋ Request approval first                │
+│     └─ INCREASE_RADIUS             📍 Expand geo-targeting                  │
+│                                                                              │
+│  🔔 SYSTEM FUNCTIONS                                                         │
+│     ├─ NOTIFICATION                📧 Send alert only                       │
+│     ├─ PING_ENDPOINT               🌐 Webhook notification                  │
+│     └─ AD_RECOMMENDATION_APPLY     🤖 Apply Meta recommendations            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🔧 OPERATORS (12)                                                            │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  COMPARISON              SET OPERATIONS         STRING                      │
+│  ├─ EQUAL         =      ├─ IN            ∈     ├─ CONTAIN       ⊂         │
+│  ├─ NOT_EQUAL     ≠      ├─ NOT_IN        ∉     └─ NOT_CONTAIN   ⊄         │
+│  ├─ GREATER_THAN  >      ├─ IN_RANGE      [ ]                              │
+│  └─ LESS_THAN     <      └─ NOT_IN_RANGE  ]![                              │
+│                                                                              │
+│  LOGICAL                                                                     │
+│  ├─ ALL    ∧  (AND)                                                         │
+│  ├─ ANY    ∨  (OR)                                                          │
+│  └─ NONE   ¬  (NOT)                                                         │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📊 TOP 20 METRICS                                                            │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  COST                PERFORMANCE           ENGAGEMENT                        │
+│  ├─ spend            ├─ impressions        ├─ frequency                     │
+│  ├─ cpc              ├─ reach              ├─ post_engagement               │
+│  ├─ cpm              ├─ clicks             └─ video_views                   │
+│  ├─ cpp              ├─ conversions                                         │
+│  └─ cost_per_conv.   ├─ roas                                                │
+│                      └─ ctr                                                  │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ⏰ TIME PRESETS                                                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  RECENT               WEEKLY                  MONTHLY/YEARLY                │
+│  ├─ today             ├─ last_7d             ├─ this_month                  │
+│  ├─ yesterday         ├─ last_14d            ├─ last_month                  │
+│  ├─ last_3d           ├─ last_28d            ├─ this_quarter                │
+│  └─ last_30d          ├─ this_week_mon...    ├─ last_quarter                │
+│                       └─ last_week_mon...    ├─ this_year                   │
+│                                              ├─ last_year                    │
+│                                              └─ lifetime                     │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🚀 TOP 5 USE CASES                                                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1️⃣  PAUSE HIGH-CPC ADS                                                     │
+│      Rule: cpc > $5 AND impressions > 1000 → PAUSE                          │
+│      Pattern: 1.1                                                            │
+│                                                                              │
+│  2️⃣  SCALE WINNERS                                                          │
+│      Rule: roas > 3 AND spend > $50 → CHANGE_BUDGET +20%                    │
+│      Pattern: 2.1                                                            │
+│                                                                              │
+│  3️⃣  BUDGET ALERTS                                                          │
+│      Rule: spend > $800 (80% budget) → NOTIFICATION                         │
+│      Pattern: 3.1                                                            │
+│                                                                              │
+│  4️⃣  LEARNING PHASE PROTECTION                                              │
+│      Rule: conversions < 50 AND spend > $200 → NOTIFICATION                 │
+│      Pattern: 4.1                                                            │
+│                                                                              │
+│  5️⃣  PAUSE LOW PERFORMERS                                                   │
+│      Rule: cpa > $50 AND spend > $100 → PAUSE                               │
+│      Pattern: 1.2                                                            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📐 RULE STRUCTURE                                                            │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  {                                                                           │
+│    "name": "Rule Name",                                                      │
+│    "status": "ENABLED",                    ┌─────────────────┐             │
+│    "evaluation_spec": {                    │  WHEN to check  │             │
+│      "evaluation_type": "SCHEDULE",        └─────────────────┘             │
+│      "filters": [                                                            │
+│        {                                                                     │
+│          "field": "cpc",                   ┌─────────────────┐             │
+│          "operator": "GREATER_THAN",       │  IF condition   │             │
+│          "value": 5                        └─────────────────┘             │
+│        }                                                                     │
+│      ]                                                                       │
+│    },                                                                        │
+│    "execution_spec": {                     ┌─────────────────┐             │
+│      "execution_type": "PAUSE"             │  THEN action    │             │
+│    }                                       └─────────────────┘             │
+│  }                                                                           │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🔄 IMPLEMENTATION WORKFLOW                                                   │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  STEP 1: TEST WITH NOTIFICATION                                             │
+│    └─ execution_type: "NOTIFICATION" (no changes)                           │
+│                                                                              │
+│  STEP 2: USE PREVIEW MODE                                                   │
+│    └─ rule.create_preview() → see affected entities                         │
+│                                                                              │
+│  STEP 3: PILOT ON 1-2 CAMPAIGNS                                             │
+│    └─ Add campaign ID filter                                                │
+│                                                                              │
+│  STEP 4: MONITOR 3-7 DAYS                                                   │
+│    └─ Check rule history daily                                              │
+│                                                                              │
+│  STEP 5: SCALE TO ALL CAMPAIGNS                                             │
+│    └─ Remove filters, enable across account                                 │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ✅ BEST PRACTICES CHECKLIST                                                  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  CONFIGURATION                                                               │
+│   [✓] Start with NOTIFICATION rules                                         │
+│   [✓] Set min impressions (500-1000+)                                       │
+│   [✓] Use appropriate time_preset                                           │
+│   [✓] Respect 50-conversion learning phase                                  │
+│   [✓] Avoid conflicting rules                                               │
+│                                                                              │
+│  EXECUTION                                                                   │
+│   [✓] Use preview before enabling                                           │
+│   [✓] Test on 1-2 campaigns first                                           │
+│   [✓] Monitor rule history daily (first week)                               │
+│   [✓] Incremental budget changes (10-20%)                                   │
+│   [✓] Document rule intent                                                  │
+│                                                                              │
+│  OPTIMIZATION                                                                │
+│   [✓] Match rules to campaign objectives                                    │
+│   [✓] Adjust thresholds based on data                                       │
+│   [✓] Archive underperforming rules                                         │
+│   [✓] Use webhooks for critical alerts                                      │
+│   [✓] Review and update monthly                                             │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🔌 API ENDPOINTS (v24)                                                       │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  CREATE   POST   /act_{account_id}/adrules_library                          │
+│  GET      GET    /{rule_id}                                                 │
+│  UPDATE   POST   /{rule_id}                                                 │
+│  DELETE   DELETE /{rule_id}                                                 │
+│  EXECUTE  POST   /{rule_id}/execute                                         │
+│  PREVIEW  POST   /{rule_id}/preview                                         │
+│  HISTORY  GET    /{rule_id}/history                                         │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 💻 QUICK SDK EXAMPLES                                                        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  PYTHON                                                                      │
+│  ├─ Create:  account.create_ad_rule(params={...})                           │
+│  ├─ Execute: AdRule(rule_id).create_execute()                               │
+│  └─ Preview: AdRule(rule_id).create_preview()                               │
+│                                                                              │
+│  JAVASCRIPT                                                                  │
+│  ├─ Create:  account.createAdRule([], ruleData)                             │
+│  ├─ Execute: new AdRule(rule_id).createExecute()                            │
+│  └─ Preview: new AdRule(rule_id).createPreview()                            │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🆘 TROUBLESHOOTING                                                           │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  RULE NOT TRIGGERING?                                                        │
+│   → Check status is ENABLED                                                 │
+│   → Verify thresholds are met                                               │
+│   → Ensure sufficient data                                                  │
+│   → Review time_preset window                                               │
+│                                                                              │
+│  RULE TRIGGERING TOO OFTEN?                                                  │
+│   → Increase thresholds                                                     │
+│   → Add more filter conditions                                              │
+│   → Change TRIGGER to SCHEDULE                                              │
+│   → Add min impression requirement                                          │
+│                                                                              │
+│  EXECUTION FAILS?                                                            │
+│   → Verify sufficient budget                                                │
+│   → Check entity is ACTIVE                                                  │
+│   → Validate execution_type                                                 │
+│   → Review execution_options                                                │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  📖 FULL DOCUMENTATION: /Users/ricardogattas-moras/poppy-ads-manager/       ║
+║  🚀 START HERE: open META_AD_RULES_README.md                                 ║
+║  ⚡ API VERSION: Meta Marketing API v24.0                                    ║
+║  📅 LAST UPDATED: January 2025                                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝

@@ -413,3 +413,116 @@ export async function createAutomatedRule(
     throw error;
   }
 }
+
+// Creative creation functions for programmatic ad creation
+export async function uploadAdImage(
+  adAccountId: string,
+  imageBuffer: Buffer,
+  filename: string,
+  accessToken: string
+) {
+  try {
+    const formattedId = formatAdAccountId(adAccountId);
+
+    // Create FormData for multipart upload
+    const FormData = require("form-data");
+    const form = new FormData();
+    form.append("filename", imageBuffer, filename);
+    form.append("access_token", accessToken);
+
+    const response = await metaApi.post(
+      `/${formattedId}/adimages`,
+      form,
+      {
+        headers: form.getHeaders(),
+      }
+    );
+
+    // Response format: { images: { [filename]: { hash: "..." } } }
+    const imageData = response.data.images[filename];
+    if (!imageData || !imageData.hash) {
+      throw new Error("Failed to get image hash from response");
+    }
+
+    console.log("Image uploaded successfully:", {
+      filename,
+      hash: imageData.hash,
+    });
+
+    return imageData.hash;
+  } catch (error) {
+    console.error("Error uploading ad image:", error);
+    throw error;
+  }
+}
+
+export async function createAdCreative(
+  adAccountId: string,
+  data: {
+    name: string;
+    page_id: string;
+    image_hash: string;
+    link: string;
+    message: string;
+    headline?: string;
+    call_to_action_type?: string;
+  },
+  accessToken: string
+) {
+  try {
+    const formattedId = formatAdAccountId(adAccountId);
+
+    // Meta API v24 creative creation using object_story_spec
+    const creativeData: Record<string, any> = {
+      name: data.name,
+      object_story_spec: {
+        page_id: data.page_id,
+        link_data: {
+          image_hash: data.image_hash,
+          link: data.link,
+          message: data.message,
+          ...(data.headline && { name: data.headline }),
+          ...(data.call_to_action_type && {
+            call_to_action: {
+              type: data.call_to_action_type,
+            },
+          }),
+        },
+      },
+    };
+
+    console.log("Creating ad creative with v24 parameters:", {
+      name: creativeData.name,
+      pageId: data.page_id,
+      imageHash: data.image_hash,
+      link: data.link,
+    });
+
+    const response = await metaApi.post(
+      `/${formattedId}/adcreatives`,
+      creativeData,
+      {
+        params: {
+          access_token: accessToken,
+        },
+      }
+    );
+
+    const creativeId = response.data.id;
+    if (!creativeId) {
+      throw new Error("Failed to get creative ID from response");
+    }
+
+    console.log("Ad creative created successfully:", {
+      creativeId,
+    });
+
+    return {
+      id: creativeId,
+      ...response.data,
+    };
+  } catch (error) {
+    console.error("Error creating ad creative:", error);
+    throw error;
+  }
+}

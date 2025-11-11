@@ -21,6 +21,23 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
   const [activatingCampaign, setActivatingCampaign] = useState(false);
   const [activationError, setActivationError] = useState("");
   const [togglingAdSetId, setTogglingAdSetId] = useState<string | null>(null);
+  const [pageId, setPageId] = useState(() => {
+    // Try to get pageId from localStorage or prompt user
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("pageId") || "";
+    }
+    return "";
+  });
+
+  // Ensure pageId is set (needed for creative creation)
+  useEffect(() => {
+    if (!pageId && typeof window !== "undefined") {
+      const storedPageId = localStorage.getItem("pageId");
+      if (storedPageId) {
+        setPageId(storedPageId);
+      }
+    }
+  }, [pageId]);
 
   // Debug: Log the account ID
   useEffect(() => {
@@ -291,7 +308,7 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
                 >
                   {isExpanded && (
                     <div className="mt-3">
-                      <AdSetAds adSet={adSet} />
+                      <AdSetAds adSet={adSet} adAccountId={adAccountId} pageId={pageId} />
                     </div>
                   )}
                 </div>
