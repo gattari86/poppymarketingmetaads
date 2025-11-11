@@ -424,13 +424,15 @@ export async function uploadAdImage(
   try {
     const formattedId = formatAdAccountId(adAccountId);
 
-    console.log("📤 Uploading image with filename:", filename);
+    console.log("📤 Uploading image with filename:", filename, "Size:", imageBuffer.length, "bytes");
 
     // Create FormData for multipart upload
     const FormData = require("form-data");
     const form = new FormData();
     form.append("filename", imageBuffer, filename);
     form.append("access_token", accessToken);
+
+    console.log("📤 Sending multipart request to Meta API...");
 
     const response = await metaApi.post(
       `/${formattedId}/adimages`,
@@ -440,13 +442,20 @@ export async function uploadAdImage(
       }
     );
 
-    console.log("📤 Meta API upload response:", JSON.stringify(response.data, null, 2));
+    console.log("📤 Meta API upload response status:", response.status);
+    console.log("📤 Meta API upload response data:", JSON.stringify(response.data, null, 2));
+
+    // Check if response has images
+    if (!response.data || !response.data.images) {
+      console.error("❌ Invalid upload response - no images field:", response.data);
+      throw new Error("Meta API did not return images field in response");
+    }
 
     // Response format: { images: { [filename]: { hash: "..." } } }
     // Meta may return images with different filenames, so check all returned images
     let imageData = response.data.images[filename];
 
-    if (!imageData && response.data.images) {
+    if (!imageData && Object.keys(response.data.images).length > 0) {
       // If exact filename not found, try to get the first/only image
       const imageKeys = Object.keys(response.data.images);
       console.log("⚠️ Exact filename not found. Available images:", imageKeys);
@@ -456,9 +465,14 @@ export async function uploadAdImage(
       }
     }
 
-    if (!imageData || !imageData.hash) {
-      console.error("❌ Upload response:", response.data);
-      throw new Error("Failed to get image hash from response");
+    if (!imageData) {
+      console.error("❌ No image data found in response. Images object:", response.data.images);
+      throw new Error("No image data returned from Meta API");
+    }
+
+    if (!imageData.hash) {
+      console.error("❌ Image data missing hash. Data:", imageData);
+      throw new Error("Image uploaded but no hash returned");
     }
 
     console.log("✅ Image uploaded successfully:", {
@@ -470,6 +484,17 @@ export async function uploadAdImage(
     return imageData.hash;
   } catch (error) {
     console.error("❌ Error uploading ad image:", error);
+
+    // Log detailed error if it's an axios error
+    const axiosError = error as any;
+    if (axiosError?.response?.data) {
+      console.error("❌ Meta API error response:", axiosError.response.data);
+      console.error("❌ HTTP Status:", axiosError.response.status);
+    }
+    if (axiosError?.message) {
+      console.error("❌ Error message:", axiosError.message);
+    }
+
     throw error;
   }
 }
