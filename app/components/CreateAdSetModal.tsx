@@ -38,16 +38,20 @@ export default function CreateAdSetModal({
         throw new Error("Bid amount must be greater than 0");
       }
 
+      // Convert to integers (Meta API requires cents as integers, not floats)
+      const dailyBudgetCents = Math.round(parseFloat(dailyBudget) * 100);
+      const bidAmountCents = Math.round(parseFloat(bidAmount) * 100);
+
       const response = await fetch(`/api/adsets?adAccountId=${adAccountId}&campaignId=${campaignId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
-          daily_budget: parseFloat(dailyBudget) * 100, // Meta API expects cents
+          daily_budget: dailyBudgetCents, // Meta API expects cents as integer
           status: "PAUSED",
           optimization_goal: optimizationGoal,
           billing_event: billingEvent,
-          bid_amount: parseFloat(bidAmount) * 100, // Convert dollars to cents
+          bid_amount: bidAmountCents, // Convert dollars to cents as integer
           targeting: {
             geo_locations: [{ country: "US" }],
           },

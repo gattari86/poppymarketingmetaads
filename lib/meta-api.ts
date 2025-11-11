@@ -153,7 +153,7 @@ export async function createAdSet(
       name: data.name,
       campaign_id: campaignId, // REQUIRED: send campaign_id in body
       status: data.status,
-      daily_budget: data.daily_budget || 1000, // Default $10/day in cents
+      daily_budget: Math.round(data.daily_budget || 1000), // Ensure integer cents
       targeting: data.targeting || {
         geo_locations: [{ country: "US" }],
       },
@@ -161,8 +161,8 @@ export async function createAdSet(
       optimization_goal: data.optimization_goal || "REACH",
       // REQUIRED: billing_event - when to charge (IMPRESSIONS, LINK_CLICKS, etc)
       billing_event: data.billing_event || "IMPRESSIONS",
-      // RECOMMENDED: bid_amount - how much to bid per event
-      bid_amount: data.bid_amount || 500, // Default 5 cents
+      // RECOMMENDED: bid_amount - how much to bid per event (must be integer cents)
+      bid_amount: Math.round(data.bid_amount || 500), // Ensure integer cents
     };
 
     console.log("Creating ad set with v24 parameters:", {
