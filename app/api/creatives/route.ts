@@ -25,8 +25,23 @@ export async function POST(request: NextRequest) {
     const headline = formData.get("headline") as string;
     const ctaType = formData.get("ctaType") as string;
 
+    // Debug logging
+    console.log("📝 Creative creation request received:", {
+      imagePresent: !!image,
+      imageName: image?.name,
+      imageSize: image?.size,
+      adAccountId: `${adAccountId} (type: ${typeof adAccountId})`,
+      pageId: `${pageId} (type: ${typeof pageId})`,
+      creativeName,
+      message: message?.substring(0, 50),
+      link,
+      headline,
+      ctaType,
+    });
+
     // Validation
     if (!image) {
+      console.error("❌ Image file is required");
       return NextResponse.json(
         { error: "Image file is required" },
         { status: 400 }
@@ -34,8 +49,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (!adAccountId || !pageId || !creativeName || !message || !link) {
+      const missing = [];
+      if (!adAccountId) missing.push("adAccountId");
+      if (!pageId) missing.push("pageId");
+      if (!creativeName) missing.push("creativeName");
+      if (!message) missing.push("message");
+      if (!link) missing.push("link");
+
+      console.error("❌ Missing required fields:", missing);
       return NextResponse.json(
-        { error: "Missing required fields: adAccountId, pageId, creativeName, message, link" },
+        { error: `Missing required fields: ${missing.join(", ")}` },
         { status: 400 }
       );
     }
@@ -53,29 +76,47 @@ export async function POST(request: NextRequest) {
     const imageBuffer = Buffer.from(arrayBuffer);
 
     // Step 1: Upload image and get hash
-    console.log("Uploading image:", image.name);
-    const imageHash = await uploadAdImage(
-      adAccountId,
-      imageBuffer,
-      image.name,
-      session.accessToken
-    );
+    console.log("📤 Step 1: Uploading image:", image.name);
+    let imageHash: string;
+    try {
+      imageHash = await uploadAdImage(
+        adAccountId,
+        imageBuffer,
+        image.name,
+        session.accessToken
+      );
+      console.log("✅ Image uploaded successfully. Hash:", imageHash);
+    } catch (uploadError) {
+      console.error("❌ Image upload failed:", uploadError);
+      throw new Error(
+        `Image upload failed: ${uploadError instanceof Error ? uploadError.message : "Unknown error"}`
+      );
+    }
 
     // Step 2: Create ad creative using the image hash
-    console.log("Creating ad creative with image hash:", imageHash);
-    const creative = await createAdCreative(
-      adAccountId,
-      {
-        name: creativeName,
-        page_id: pageId,
-        image_hash: imageHash,
-        link,
-        message,
-        headline: headline || undefined,
-        call_to_action_type: ctaType || undefined,
-      },
-      session.accessToken
-    );
+    console.log("🎨 Step 2: Creating ad creative with image hash:", imageHash);
+    let creative;
+    try {
+      creative = await createAdCreative(
+        adAccountId,
+        {
+          name: creativeName,
+          page_id: pageId,
+          image_hash: imageHash,
+          link,
+          message,
+          headline: headline || undefined,
+          call_to_action_type: ctaType || undefined,
+        },
+        session.accessToken
+      );
+      console.log("✅ Creative created successfully. ID:", creative.id);
+    } catch (creativeError) {
+      console.error("❌ Creative creation failed:", creativeError);
+      throw new Error(
+        `Creative creation failed: ${creativeError instanceof Error ? creativeError.message : "Unknown error"}`
+      );
+    }
 
     return NextResponse.json({
       success: true,
@@ -86,9 +127,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error in creatives route:", error);
-
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("❌ Fatal error in creatives route:", errorMessage);
+
     const statusCode = errorMessage.includes("401") ? 401 : 400;
 
     return NextResponse.json(
