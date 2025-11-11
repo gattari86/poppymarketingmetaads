@@ -178,7 +178,15 @@ export async function createAdSet(
 
   try {
     // Correct endpoint: POST /act_{ad_account_id}/adsets with campaign_id in body
-    const response = await metaApi.post(`/${formattedAccountId}/adsets`, adSetData, {
+    const endpoint = `/${formattedAccountId}/adsets`;
+    console.log("📡 Making POST request to Meta API:", {
+      endpoint,
+      baseURL: `${GRAPH_API_URL}/${API_VERSION}`,
+      fullURL: `${GRAPH_API_URL}/${API_VERSION}${endpoint}`,
+      data: adSetData,
+    });
+
+    const response = await metaApi.post(endpoint, adSetData, {
       params: {
         access_token: accessToken,
       },
