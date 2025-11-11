@@ -496,9 +496,7 @@ export async function createAdCreative(
           message: data.message,
           ...(data.headline && { name: data.headline }),
           ...(data.call_to_action_type && {
-            call_to_action: {
-              type: data.call_to_action_type,
-            },
+            call_to_action_type: data.call_to_action_type,
           }),
         },
       },
