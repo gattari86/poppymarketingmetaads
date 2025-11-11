@@ -101,7 +101,20 @@ export async function POST(request: Request) {
     }
 
     const result = await createCampaign(adAccountId, body, session.accessToken);
-    return Response.json(result, { status: 201 });
+
+    // Meta API returns minimal response: { id, ... }
+    // Enrich it with required fields so it matches Campaign type
+    const enrichedCampaign = {
+      id: result.id,
+      name: body.name,
+      status: body.status || "PAUSED",
+      objective: body.objective,
+      created_time: new Date().toISOString(),
+      updated_time: new Date().toISOString(),
+      daily_budget: body.daily_budget,
+    };
+
+    return Response.json(enrichedCampaign, { status: 201 });
   } catch (error) {
     console.error("Error creating campaign:", error);
 

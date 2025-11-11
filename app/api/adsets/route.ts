@@ -107,7 +107,21 @@ export async function POST(request: Request) {
     }
 
     const result = await createAdSet(adAccountId, campaignId, body, session.accessToken);
-    return Response.json(result, { status: 201 });
+
+    // Meta API returns minimal response: { id, ... }
+    // Enrich it with required fields so it matches AdSet type
+    const enrichedAdSet = {
+      id: result.id,
+      name: body.name,
+      campaign_id: campaignId,
+      status: body.status || "PAUSED",
+      daily_budget: body.daily_budget,
+      targeting: body.targeting,
+      created_time: new Date().toISOString(),
+      updated_time: new Date().toISOString(),
+    };
+
+    return Response.json(enrichedAdSet, { status: 201 });
   } catch (error) {
     console.error("❌ Error creating ad set:", error);
 
