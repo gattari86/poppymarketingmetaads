@@ -18,11 +18,28 @@ export default function CreateAdModal({
   const [name, setName] = useState("");
   const [useExistingCreative, setUseExistingCreative] = useState(true);
   const [creativeId, setCreativeId] = useState("");
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
+  const [headline, setHeadline] = useState("");
+  const [primaryText, setPrimaryText] = useState("");
+  const [description, setDescription] = useState("");
+  const [landingPageUrl, setLandingPageUrl] = useState("");
+  const [ctaType, setCtaType] = useState("LEARN_MORE");
   const [imageUrl, setImageUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const CTA_TYPES = [
+    "LEARN_MORE",
+    "SHOP_NOW",
+    "CONTACT_US",
+    "SIGN_UP",
+    "SUBSCRIBE",
+    "DOWNLOAD",
+    "GET_OFFER",
+    "BOOK_NOW",
+    "GET_QUOTES",
+    "ORDER_NOW",
+    "INSTALL_APP",
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,8 +52,10 @@ export default function CreateAdModal({
       if (useExistingCreative) {
         if (!creativeId.trim()) throw new Error("Please enter a creative ID");
       } else {
-        if (!title.trim()) throw new Error("Ad title is required");
-        if (!body.trim()) throw new Error("Ad body text is required");
+        if (!headline.trim()) throw new Error("Headline is required");
+        if (!primaryText.trim()) throw new Error("Primary text is required");
+        if (!landingPageUrl.trim()) throw new Error("Landing page URL is required");
+        if (!imageUrl.trim()) throw new Error("Image URL is required");
       }
 
       const requestBody: Record<string, unknown> = {
@@ -51,15 +70,15 @@ export default function CreateAdModal({
           creative_id: creativeId.trim(),
         };
       } else {
-        // For new creative, pass as separate object
-        // Note: Creating inline creatives requires the ads API to handle it properly
+        // Create inline creative with all fields per Meta v24
         requestBody.creative = {
-          title: title.trim(),
-          body: body.trim(),
+          title: headline.trim(),
+          body: primaryText.trim(),
+          link_description: description.trim() || undefined,
+          image_url: imageUrl.trim(),
+          call_to_action_type: ctaType,
+          object_url: landingPageUrl.trim(),
         };
-        if (imageUrl.trim()) {
-          (requestBody.creative as Record<string, unknown>).image_url = imageUrl.trim();
-        }
       }
 
       const response = await fetch(`/api/ads?adSetId=${adSetId}`, {
@@ -91,12 +110,12 @@ export default function CreateAdModal({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content max-w-lg" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-2xl font-poppins font-semibold text-gray-900 mb-6">
+      <div className="modal-content flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+        <h2 className="text-2xl font-poppins font-semibold text-gray-900 mb-6 flex-shrink-0">
           Create Ad
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-2">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Ad Name
@@ -161,46 +180,108 @@ export default function CreateAdModal({
               <div className="space-y-3 ml-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-xs text-amber-800 mb-3 flex items-start gap-2">
                   <Warning size={16} weight="fill" className="text-amber-700 flex-shrink-0 mt-0.5" />
-                  <span><strong>This requires additional setup:</strong> After filling in details below, creatives will need to be uploaded to Meta Ads Manager separately before ads can use them.</span>
+                  <span><strong>Create inline creative:</strong> Fill in all details below. These fields will be sent to Meta as creative data.</span>
                 </p>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Title
+                    Headline <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Ad headline"
+                    value={headline}
+                    onChange={(e) => setHeadline(e.target.value)}
+                    placeholder="e.g., Amazing Summer Sale"
+                    maxLength={125}
+                    required
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
                   />
+                  <p className="text-xs text-gray-500 mt-1">{headline.length}/125 characters</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Body Text
+                    Primary Text <span className="text-red-500">*</span>
                   </label>
                   <textarea
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    placeholder="Ad description"
+                    value={primaryText}
+                    onChange={(e) => setPrimaryText(e.target.value)}
+                    placeholder="Main ad copy / body text"
                     rows={3}
+                    maxLength={300}
+                    required
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
                   />
+                  <p className="text-xs text-gray-500 mt-1">{primaryText.length}/300 characters</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Image URL (optional)
+                    Description (Optional)
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Additional details (appears below primary text)"
+                    rows={2}
+                    maxLength={300}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">{description.length}/300 characters</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Image URL <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="url"
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
                     placeholder="https://example.com/image.jpg"
+                    required
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Image must be at least 1200x628px for best results
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Landing Page URL <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={landingPageUrl}
+                    onChange={(e) => setLandingPageUrl(e.target.value)}
+                    placeholder="https://your-website.com/page"
+                    required
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    URL where users will be directed when they click the ad
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Call-to-Action Button <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={ctaType}
+                    onChange={(e) => setCtaType(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                  >
+                    {CTA_TYPES.map((cta) => (
+                      <option key={cta} value={cta}>
+                        {cta.replace(/_/g, " ")}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Button text shown to users (e.g., "Shop Now", "Learn More")
+                  </p>
                 </div>
               </div>
             )}
@@ -211,24 +292,25 @@ export default function CreateAdModal({
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
-
-          <div className="flex gap-3 pt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-outline flex-1"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !name}
-              className="btn-primary flex-1 disabled:opacity-50"
-            >
-              {loading ? "Creating..." : "Create Ad"}
-            </button>
-          </div>
         </form>
+
+        <div className="flex gap-3 pt-6 mt-6 px-0 border-t border-gray-200 flex-shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="btn-outline flex-1"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading || !name}
+            onClick={handleSubmit}
+            className="btn-primary flex-1 disabled:opacity-50"
+          >
+            {loading ? "Creating..." : "Create Ad"}
+          </button>
+        </div>
       </div>
     </div>
   );

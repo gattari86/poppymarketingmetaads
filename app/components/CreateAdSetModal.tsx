@@ -106,9 +106,11 @@ export default function CreateAdSetModal({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-2xl font-poppins font-semibold text-gray-900 mb-6 flex-shrink-0">
-          Create Ad Set
-        </h2>
+        <div className="flex-shrink-0">
+          <h2 className="text-2xl font-poppins font-semibold text-gray-900 mb-6">
+            Create Ad Set
+          </h2>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto flex-1 pr-2">
           <div>
@@ -291,7 +293,7 @@ export default function CreateAdSetModal({
           )}
         </form>
 
-        <div className="flex gap-3 pt-4 mt-6 border-t border-gray-200 flex-shrink-0">
+        <div className="flex gap-3 pt-6 mt-6 px-0 border-t border-gray-200 flex-shrink-0">
           <button
             type="button"
             onClick={onClose}
