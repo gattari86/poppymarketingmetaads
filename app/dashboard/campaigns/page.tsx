@@ -230,6 +230,7 @@ function CampaignsContent() {
               {/* Ad Sets */}
               {selectedCampaign?.id === campaign.id && (
                 <CampaignAdSets
+                  adAccountId={accountId || ""}
                   campaign={campaign}
                   onCampaignUpdate={(updatedCampaign) => {
                     // Update campaigns list with updated status

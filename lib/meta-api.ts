@@ -130,6 +130,7 @@ export async function createCampaign(
 }
 
 export async function createAdSet(
+  adAccountId: string,
   campaignId: string,
   data: {
     name: string;
@@ -143,10 +144,14 @@ export async function createAdSet(
   accessToken: string
 ) {
   try {
-    // Meta API v24 requires specific parameters for ad set creation
-    // NOTE: When posting to /campaignId/adsets, do NOT send campaign_id in body - it's already in URL
+    // Meta API v24 CORRECT endpoint: POST /act_{ad_account_id}/adsets
+    // NOT /{campaignId}/adsets - that doesn't exist!
+    // campaign_id is sent in the request body, not in URL
+    const formattedAccountId = formatAdAccountId(adAccountId);
+
     const adSetData: Record<string, any> = {
       name: data.name,
+      campaign_id: campaignId, // REQUIRED: send campaign_id in body
       status: data.status,
       daily_budget: data.daily_budget || 1000, // Default $10/day in cents
       targeting: data.targeting || {
@@ -161,6 +166,7 @@ export async function createAdSet(
     };
 
     console.log("Creating ad set with v24 parameters:", {
+      accountId: formattedAccountId,
       campaignId,
       name: adSetData.name,
       daily_budget: adSetData.daily_budget,
@@ -169,8 +175,8 @@ export async function createAdSet(
       status: adSetData.status,
     });
 
-    // Post to /campaignId/adsets - campaign_id is in URL, not in body
-    const response = await metaApi.post(`/${campaignId}/adsets`, adSetData, {
+    // Correct endpoint: POST /act_{ad_account_id}/adsets with campaign_id in body
+    const response = await metaApi.post(`/${formattedAccountId}/adsets`, adSetData, {
       params: {
         access_token: accessToken,
       },

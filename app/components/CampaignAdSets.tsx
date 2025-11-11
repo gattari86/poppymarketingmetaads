@@ -6,11 +6,12 @@ import CreateAdSetModal from "./CreateAdSetModal";
 import AdSetAds from "./AdSetAds";
 
 interface CampaignAdSetsProps {
+  adAccountId: string;
   campaign: Campaign;
   onCampaignUpdate?: (updatedCampaign: Campaign) => void;
 }
 
-export default function CampaignAdSets({ campaign, onCampaignUpdate }: CampaignAdSetsProps) {
+export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate }: CampaignAdSetsProps) {
   const [adSets, setAdSets] = useState<AdSet[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -136,6 +137,7 @@ export default function CampaignAdSets({ campaign, onCampaignUpdate }: CampaignA
 
       {showCreateModal && (
         <CreateAdSetModal
+          adAccountId={adAccountId}
           campaignId={campaign.id}
           onClose={() => setShowCreateModal(false)}
           onSuccess={handleAdSetCreated}

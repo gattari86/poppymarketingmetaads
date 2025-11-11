@@ -4,12 +4,14 @@ import { useState } from "react";
 import type { AdSet } from "@/lib/types";
 
 interface CreateAdSetModalProps {
+  adAccountId: string;
   campaignId: string;
   onClose: () => void;
   onSuccess: (adSet: AdSet) => void;
 }
 
 export default function CreateAdSetModal({
+  adAccountId,
   campaignId,
   onClose,
   onSuccess,
@@ -36,7 +38,7 @@ export default function CreateAdSetModal({
         throw new Error("Bid amount must be greater than 0");
       }
 
-      const response = await fetch(`/api/adsets?campaignId=${campaignId}`, {
+      const response = await fetch(`/api/adsets?adAccountId=${adAccountId}&campaignId=${campaignId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
