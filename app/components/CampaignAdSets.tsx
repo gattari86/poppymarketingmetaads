@@ -20,6 +20,7 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
   const [selectedAdSet, setSelectedAdSet] = useState<AdSet | null>(null);
   const [activatingCampaign, setActivatingCampaign] = useState(false);
   const [activationError, setActivationError] = useState("");
+  const [togglingAdSetId, setTogglingAdSetId] = useState<string | null>(null);
 
   // Debug: Log the account ID
   useEffect(() => {
@@ -103,6 +104,47 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
       setActivationError(errorMsg);
     } finally {
       setActivatingCampaign(false);
+    }
+  };
+
+  const handleToggleAdSetStatus = async (adSet: AdSet) => {
+    const newStatus = adSet.status === "ACTIVE" ? "PAUSED" : "ACTIVE";
+    setTogglingAdSetId(adSet.id);
+
+    try {
+      const response = await fetch(
+        `/api/adsets?adSetId=${adSet.id}&status=${newStatus}`,
+        { method: "PATCH" }
+      );
+
+      if (!response.ok) {
+        let errorMessage = `Failed to ${newStatus === "ACTIVE" ? "activate" : "pause"} ad set`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Update ad set status locally
+      setAdSets(adSets.map(as =>
+        as.id === adSet.id ? { ...as, status: newStatus as typeof newStatus } : as
+      ));
+
+      toast.success(
+        newStatus === "ACTIVE"
+          ? `Ad set "${adSet.name}" activated successfully`
+          : `Ad set "${adSet.name}" paused successfully`
+      );
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "An error occurred";
+      toast.error(`Failed to ${newStatus === "ACTIVE" ? "activate" : "pause"} ad set`, {
+        description: errorMsg,
+      });
+    } finally {
+      setTogglingAdSetId(null);
     }
   };
 
@@ -216,10 +258,29 @@ export default function CampaignAdSets({ adAccountId, campaign, onCampaignUpdate
                       </p>
                     )}
                   </div>
-                  <div className={`text-gray-400 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                  <div className="flex items-center gap-2">
+                    {/* Status toggle button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleAdSetStatus(adSet);
+                      }}
+                      disabled={togglingAdSetId === adSet.id}
+                      className={`px-3 py-1 text-xs font-semibold rounded transition-colors disabled:opacity-50 ${
+                        adSet.status === "ACTIVE"
+                          ? "bg-green-100 text-green-700 hover:bg-green-200"
+                          : "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                      }`}
+                      title={adSet.status === "ACTIVE" ? "Click to pause" : "Click to activate"}
+                      aria-label={`Toggle ad set status: currently ${adSet.status}`}
+                    >
+                      {togglingAdSetId === adSet.id ? "Updating..." : (adSet.status === "ACTIVE" ? "Pause" : "Activate")}
+                    </button>
+                    <div className={`text-gray-400 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
                   </div>
                 </button>
 

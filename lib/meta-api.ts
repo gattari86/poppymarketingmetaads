@@ -320,6 +320,50 @@ export async function deleteCampaign(
   }
 }
 
+export async function updateAdSetStatus(
+  adSetId: string,
+  status: "ACTIVE" | "PAUSED" | "DELETED" | "ARCHIVED",
+  accessToken: string
+) {
+  try {
+    const response = await metaApi.post(
+      `/${adSetId}`,
+      { status },
+      {
+        params: {
+          access_token: accessToken,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating ad set status:", error);
+    throw error;
+  }
+}
+
+export async function updateAdStatus(
+  adId: string,
+  status: "ACTIVE" | "PAUSED" | "DELETED" | "ARCHIVED",
+  accessToken: string
+) {
+  try {
+    const response = await metaApi.post(
+      `/${adId}`,
+      { status },
+      {
+        params: {
+          access_token: accessToken,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating ad status:", error);
+    throw error;
+  }
+}
+
 export async function getAutomatedRules(
   adAccountId: string,
   accessToken: string

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { AdSet, Ad } from "@/lib/types";
 import CreateAdModal from "./CreateAdModal";
 
@@ -12,6 +13,7 @@ export default function AdSetAds({ adSet }: AdSetAdsProps) {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [togglingAdId, setTogglingAdId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAds = async () => {
@@ -36,6 +38,47 @@ export default function AdSetAds({ adSet }: AdSetAdsProps) {
   const handleAdCreated = (newAd: Ad) => {
     setAds([newAd, ...ads]);
     setShowCreateModal(false);
+  };
+
+  const handleToggleAdStatus = async (ad: Ad) => {
+    const newStatus = ad.status === "ACTIVE" ? "PAUSED" : "ACTIVE";
+    setTogglingAdId(ad.id);
+
+    try {
+      const response = await fetch(
+        `/api/ads?adId=${ad.id}&status=${newStatus}`,
+        { method: "PATCH" }
+      );
+
+      if (!response.ok) {
+        let errorMessage = `Failed to ${newStatus === "ACTIVE" ? "activate" : "pause"} ad`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Update ad status locally
+      setAds(ads.map(a =>
+        a.id === ad.id ? { ...a, status: newStatus as typeof newStatus } : a
+      ));
+
+      toast.success(
+        newStatus === "ACTIVE"
+          ? `Ad "${ad.name}" activated successfully`
+          : `Ad "${ad.name}" paused successfully`
+      );
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "An error occurred";
+      toast.error(`Failed to ${newStatus === "ACTIVE" ? "activate" : "pause"} ad`, {
+        description: errorMsg,
+      });
+    } finally {
+      setTogglingAdId(null);
+    }
   };
 
   return (
@@ -73,12 +116,27 @@ export default function AdSetAds({ adSet }: AdSetAdsProps) {
           {ads.map((ad) => (
             <div
               key={ad.id}
-              className="bg-gray-50 rounded p-3 border border-gray-100"
+              className="bg-gray-50 rounded p-3 border border-gray-100 flex justify-between items-center"
             >
-              <p className="text-sm font-semibold text-gray-800">{ad.name}</p>
-              <p className="text-xs text-gray-500 capitalize mt-1">
-                Status: {ad.status}
-              </p>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">{ad.name}</p>
+                <p className="text-xs text-gray-500 capitalize mt-1">
+                  Status: {ad.status}
+                </p>
+              </div>
+              <button
+                onClick={() => handleToggleAdStatus(ad)}
+                disabled={togglingAdId === ad.id}
+                className={`px-3 py-1 text-xs font-semibold rounded transition-colors disabled:opacity-50 whitespace-nowrap ml-2 ${
+                  ad.status === "ACTIVE"
+                    ? "bg-green-100 text-green-700 hover:bg-green-200"
+                    : "bg-orange-100 text-orange-700 hover:bg-orange-200"
+                }`}
+                title={ad.status === "ACTIVE" ? "Click to pause" : "Click to activate"}
+                aria-label={`Toggle ad status: currently ${ad.status}`}
+              >
+                {togglingAdId === ad.id ? "Updating..." : (ad.status === "ACTIVE" ? "Pause" : "Activate")}
+              </button>
             </div>
           ))}
         </div>
