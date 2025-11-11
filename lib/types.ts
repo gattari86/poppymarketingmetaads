@@ -20,8 +20,8 @@ export interface Campaign {
   objective: string;
   created_time: string;
   updated_time: string;
-  daily_budget?: number;
-  lifetime_budget?: number;
+  daily_budget?: string | number;
+  lifetime_budget?: string | number;
 }
 
 export interface AdSet {
@@ -30,8 +30,8 @@ export interface AdSet {
   campaign_id: string;
   status: string;
   targeting?: Record<string, unknown>;
-  daily_budget?: number;
-  lifetime_budget?: number;
+  daily_budget?: string | number;
+  lifetime_budget?: string | number;
   created_time: string;
   updated_time: string;
 }

@@ -77,19 +77,27 @@ function RulesContent() {
       </div>
 
       {/* Empty State */}
-      <div className="bg-poppy-light-purple/10 border border-poppy-light-purple/30 rounded-xl p-8 text-center">
-        <h3 className="text-lg font-poppins font-semibold text-gray-800 mb-2">
-          No Rules Created Yet
-        </h3>
-        <p className="text-gray-600 mb-6">
-          Create your first automated rule to save time and control your ad spend.
-        </p>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="btn-primary"
-        >
-          Create Your First Rule
-        </button>
+      <div className="bg-gradient-to-br from-poppy-light-purple/10 to-poppy-light-purple/5 border-2 border-dashed border-poppy-light-purple/40 rounded-xl p-12 text-center">
+        <div className="max-w-md mx-auto">
+          <div className="text-6xl mb-4">⚙️</div>
+          <h3 className="text-xl font-poppins font-semibold text-gray-800 mb-2">
+            No Rules Created Yet
+          </h3>
+          <p className="text-gray-600 mb-6">
+            Automate your campaign management with smart rules. Set spend limits, pause underperforming ads, and more!
+          </p>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="btn-primary"
+          >
+            <span className="flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Your First Rule
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   );
