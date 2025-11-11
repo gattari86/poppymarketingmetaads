@@ -32,6 +32,15 @@ export default function CreateAdModal({
   const [headline, setHeadline] = useState("");
   const [ctaType, setCtaType] = useState("LEARN_MORE");
 
+  // New Ad Copy fields (for display in ad)
+  const [primaryText, setPrimaryText] = useState("");
+  const [description, setDescription] = useState("");
+  const [displayLink, setDisplayLink] = useState("");
+
+  // Tracking fields
+  const [trackingEnabled, setTrackingEnabled] = useState(false);
+  const [trackingPixel, setTrackingPixel] = useState("");
+
   // Local pageId state - can override if prop is empty
   const [localPageId, setLocalPageId] = useState(pageId || "");
 
@@ -336,7 +345,13 @@ export default function CreateAdModal({
                   />
                 </div>
 
-                {/* URL and CTA - Side by side on desktop, stacked on mobile */}
+                {/* Section Divider - DESTINATION SECTION */}
+                <div className="pt-2 pb-4 border-t border-gray-200">
+                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">Destination</h3>
+                  <p className="text-xs md:text-sm text-gray-600">Where users are sent when they click</p>
+                </div>
+
+                {/* URL and Display Link */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-7 md:gap-8">
                   <div className="space-y-2.5">
                     <label className="block text-sm md:text-base font-semibold text-gray-900">
@@ -349,25 +364,136 @@ export default function CreateAdModal({
                       placeholder="https://yoursite.com"
                       className="w-full px-4 md:px-5 py-3 md:py-4 text-sm md:text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple focus:border-transparent transition-all"
                     />
+                    <p className="text-xs md:text-sm text-gray-500">
+                      The actual URL users are sent to
+                    </p>
                   </div>
 
                   <div className="space-y-2.5">
                     <label className="block text-sm md:text-base font-semibold text-gray-900">
-                      Call-to-Action
+                      Display Link <span className="text-gray-400 font-normal">(optional)</span>
                     </label>
-                    <select
-                      value={ctaType}
-                      onChange={(e) => setCtaType(e.target.value)}
-                      className="w-full px-4 md:px-5 py-3 md:py-4 text-sm md:text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple focus:border-transparent transition-all bg-white cursor-pointer"
-                    >
-                      <option value="LEARN_MORE">Learn More</option>
-                      <option value="SHOP_NOW">Shop Now</option>
-                      <option value="GET_OFFER">Get Offer</option>
-                      <option value="CONTACT_US">Contact Us</option>
-                      <option value="SIGN_UP">Sign Up</option>
-                      <option value="DOWNLOAD">Download</option>
-                    </select>
+                    <input
+                      type="text"
+                      value={displayLink}
+                      onChange={(e) => setDisplayLink(e.target.value)}
+                      placeholder="yoursite.com"
+                      className="w-full px-4 md:px-5 py-3 md:py-4 text-sm md:text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple focus:border-transparent transition-all"
+                    />
+                    <p className="text-xs md:text-sm text-gray-500">
+                      URL shown to users (can differ from actual landing page)
+                    </p>
                   </div>
+                </div>
+
+                {/* Section Divider - AD COPY SECTION */}
+                <div className="pt-4 pb-4 border-t border-gray-200">
+                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">Ad Copy</h3>
+                  <p className="text-xs md:text-sm text-gray-600">Text that appears in your ad placements</p>
+                </div>
+
+                {/* Primary Text */}
+                <div className="space-y-2.5">
+                  <label className="block text-sm md:text-base font-semibold text-gray-900">
+                    Primary Text <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <textarea
+                    value={primaryText}
+                    onChange={(e) => setPrimaryText(e.target.value)}
+                    placeholder="Additional promotional text for your ad"
+                    rows={3}
+                    className="w-full px-4 md:px-5 py-3 md:py-4 text-sm md:text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple focus:border-transparent transition-all resize-none"
+                  />
+                  <p className="text-xs md:text-sm text-gray-500 mt-2">
+                    Text that appears above the image in the ad
+                  </p>
+                </div>
+
+                {/* Description */}
+                <div className="space-y-2.5">
+                  <label className="block text-sm md:text-base font-semibold text-gray-900">
+                    Description <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Additional description text below the image"
+                    rows={2}
+                    className="w-full px-4 md:px-5 py-3 md:py-4 text-sm md:text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple focus:border-transparent transition-all resize-none"
+                  />
+                  <p className="text-xs md:text-sm text-gray-500 mt-2">
+                    Appears below the image in some placements
+                  </p>
+                </div>
+
+                {/* Call-to-Action */}
+                <div className="space-y-2.5">
+                  <label className="block text-sm md:text-base font-semibold text-gray-900">
+                    Call-to-Action Button
+                  </label>
+                  <select
+                    value={ctaType}
+                    onChange={(e) => setCtaType(e.target.value)}
+                    className="w-full px-4 md:px-5 py-3 md:py-4 text-sm md:text-base border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple focus:border-transparent transition-all bg-white cursor-pointer"
+                  >
+                    <option value="LEARN_MORE">Learn More</option>
+                    <option value="SHOP_NOW">Shop Now</option>
+                    <option value="GET_OFFER">Get Offer</option>
+                    <option value="CONTACT_US">Contact Us</option>
+                    <option value="SIGN_UP">Sign Up</option>
+                    <option value="DOWNLOAD">Download</option>
+                    <option value="BOOK_NOW">Book Now</option>
+                    <option value="SUBSCRIBE">Subscribe</option>
+                    <option value="APPLY_NOW">Apply Now</option>
+                  </select>
+                  <p className="text-xs md:text-sm text-gray-500 mt-2">
+                    Action button that appears in your ad
+                  </p>
+                </div>
+
+                {/* Section Divider - TRACKING SECTION */}
+                <div className="pt-4 pb-4 border-t border-gray-200">
+                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">Tracking</h3>
+                  <p className="text-xs md:text-sm text-gray-600">Measure ad performance and conversions</p>
+                </div>
+
+                {/* Tracking Toggle */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+                    <div className="flex-1">
+                      <label className="block text-sm md:text-base font-semibold text-gray-900">
+                        Enable Conversion Tracking
+                      </label>
+                      <p className="text-xs md:text-sm text-gray-600 mt-1">
+                        Track conversions using pixels and events
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={trackingEnabled}
+                      onChange={(e) => setTrackingEnabled(e.target.checked)}
+                      className="w-5 h-5 ml-4 cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Tracking Pixel Selection - Only show if tracking enabled */}
+                  {trackingEnabled && (
+                    <div className="space-y-2.5 p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+                      <label className="block text-sm md:text-base font-semibold text-gray-900">
+                        Conversion Tracking Pixel <span className="text-gray-400 font-normal">(optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={trackingPixel}
+                        onChange={(e) => setTrackingPixel(e.target.value)}
+                        placeholder="e.g., 123456789012345"
+                        className="w-full px-4 md:px-5 py-3 md:py-4 text-sm md:text-base border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple focus:border-transparent transition-all bg-white"
+                      />
+                      <p className="text-xs md:text-sm text-gray-600 mt-2">
+                        Meta pixel ID to track conversions from this ad
+                      </p>
+                    </div>
+                  )}
                 </div>
               </>
             )}
