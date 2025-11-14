@@ -21,22 +21,19 @@ interface AdSet {
   status: string;
 }
 
-type RuleType = "spend" | "roas" | "cpa" | "time";
+type RuleType = "roas" | "cpa" | "time";
 
 export default function CreateRuleModal({
   accountId,
   onClose,
   onSuccess,
 }: CreateRuleModalProps) {
-  const [ruleType, setRuleType] = useState<RuleType>("spend");
+  const [ruleType, setRuleType] = useState<RuleType>("roas");
   const [ruleName, setRuleName] = useState("");
   const [adSetId, setAdSetId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-
-  // Spend Rule Fields
-  const [spendThreshold, setSpendThreshold] = useState("500");
 
   // ROAS Rule Fields
   const [roasPauseThreshold, setRoasPauseThreshold] = useState("1.50");
@@ -120,34 +117,7 @@ export default function CreateRuleModal({
     // Meta's adrules_library API uses SCHEDULE evaluation type for automated pause/unpause
     // evaluation_spec contains: evaluation_type and filters array
     // Filters target specific metrics and ad sets
-
-    if (ruleType === "spend") {
-      return {
-        evaluation_type: "SCHEDULE",
-        filters: [
-          {
-            field: "entity_type",
-            value: "ADSET",
-            operator: "EQUAL",
-          },
-          {
-            field: "adset.id",
-            value: [adSetId],
-            operator: "IN",
-          },
-          {
-            field: "spend",
-            operator: "GREATER_THAN",
-            value: parseInt(spendThreshold),
-          },
-          {
-            field: "time_preset",
-            value: "TODAY",
-            operator: "EQUAL",
-          },
-        ],
-      };
-    }
+    // NOTE: Meta does NOT support "spend" filter field - removed in favor of ROAS and CPA based rules
 
     if (ruleType === "roas") {
       return {
@@ -251,10 +221,6 @@ export default function CreateRuleModal({
       }
 
       // Validate metric-specific fields
-      if (ruleType === "spend" && !spendThreshold) {
-        throw new Error("Please enter a spend threshold");
-      }
-
       if (ruleType === "roas") {
         if (!roasPauseThreshold) {
           throw new Error("Please enter a ROAS pause threshold");
@@ -472,7 +438,6 @@ export default function CreateRuleModal({
 
       setSuccess(true);
       setRuleName("");
-      setSpendThreshold("500");
       setRoasPauseThreshold("1.50");
       setRoasUnpauseThreshold("2.00");
       setCpaPauseThreshold("50");
@@ -516,18 +481,7 @@ export default function CreateRuleModal({
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Rule Type
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setRuleType("spend")}
-                  className={`px-3 py-2 sm:px-4 sm:py-3 rounded-lg font-medium text-xs sm:text-sm transition-all ${
-                    ruleType === "spend"
-                      ? "bg-poppy-dark-purple text-white shadow-lg"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  💰 Spend
-                </button>
+              <div className="grid grid-cols-3 sm:grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setRuleType("roas")}
@@ -574,9 +528,7 @@ export default function CreateRuleModal({
                 value={ruleName}
                 onChange={(e) => setRuleName(e.target.value)}
                 placeholder={
-                  ruleType === "spend"
-                    ? "e.g., Pause when spend hits $500"
-                    : ruleType === "roas"
+                  ruleType === "roas"
                     ? "e.g., Pause when ROAS drops below 1.5x"
                     : ruleType === "cpa"
                     ? "e.g., Pause when CPA exceeds $50"
@@ -585,26 +537,6 @@ export default function CreateRuleModal({
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
               />
             </div>
-
-            {/* Spend Rule Fields */}
-            {ruleType === "spend" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Daily Spend Threshold (USD)
-                </label>
-                <input
-                  type="number"
-                  value={spendThreshold}
-                  onChange={(e) => setSpendThreshold(e.target.value)}
-                  min="1"
-                  step="50"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Ad set will pause when daily spend exceeds this amount
-                </p>
-              </div>
-            )}
 
             {/* ROAS Rule Fields */}
             {ruleType === "roas" && (

@@ -1,0 +1,393 @@
+================================================================================
+POPPY ADS MANAGER - CODEBASE ANALYTICS EXPLORATION SUMMARY
+================================================================================
+
+EXECUTIVE SUMMARY:
+The Poppy Ads Manager currently displays only campaign management metrics
+(campaign counts, statuses) with NO performance/analytics data. Meta Graph API
+insights endpoints are available but not implemented.
+
+================================================================================
+SECTION 1: CURRENT METRICS DISPLAYED
+================================================================================
+
+Dashboard Level:
+  - Active Campaigns count (ACTIVE status)
+  - Paused Campaigns count (PAUSED status)
+  - Total Campaigns count
+
+Campaign Management Level:
+  - Campaign Stats: Total, Active, Paused
+  - Campaign Details: Name, Status, Objective, Budget, Created Date
+  - Ad Set count per campaign
+  - Ad count per ad set
+  - Ad status (ACTIVE/PAUSED only)
+
+Data Fetched BUT Not Displayed:
+  - daily_budget (displayed in campaigns list)
+  - lifetime_budget (available but unused)
+  - targeting config (available but unused)
+  - created_time, updated_time (available but unused)
+
+NOT Fetched (Available in Meta API):
+  - Impressions
+  - Clicks
+  - Spend
+  - Reach
+  - Frequency
+  - Actions/Conversions
+  - CTR (Click-Through Rate)
+  - CPC (Cost Per Click)
+  - CPM (Cost Per Mille)
+  - ROAS (Return on Ad Spend)
+
+================================================================================
+SECTION 2: AVAILABLE META API ENDPOINTS FOR AD/CAMPAIGN PERFORMANCE
+================================================================================
+
+Currently Used Endpoints:
+  1. GET /me/adaccounts
+     - Purpose: List user's Meta ad accounts
+     - Fields: id, name, currency, account_id, account_status
+
+  2. GET /{act_adAccountId}/campaigns
+     - Purpose: List campaigns in ad account
+     - Fields: id, name, status, objective, created_time, updated_time,
+               daily_budget, lifetime_budget
+
+  3. GET /{campaignId}/adsets
+     - Purpose: List ad sets in campaign
+     - Fields: id, name, campaign_id, status, targeting, daily_budget,
+               lifetime_budget, created_time, updated_time
+
+  4. GET /{adSetId}/ads
+     - Purpose: List ads in ad set
+     - Fields: id, name, adset_id, campaign_id, status, creative,
+               created_time, updated_time
+
+  5. GET /{adAccountId}/adrules_library
+     - Purpose: List automated rules
+     - Fields: id, name, status, evaluation_spec, execution_spec,
+               created_time, updated_time
+
+AVAILABLE BUT NOT IMPLEMENTED - INSIGHTS ENDPOINTS:
+  6. GET /{campaign_id}/insights
+     - Purpose: Campaign performance metrics
+     - Available Fields: spend, impressions, clicks, reach, frequency, actions,
+                        action_values, ctr, cpc, cpm, date_start, date_stop
+
+  7. GET /{adset_id}/insights
+     - Purpose: Ad set performance metrics
+     - Same fields as campaign insights
+
+  8. GET /{ad_id}/insights
+     - Purpose: Individual ad performance metrics
+     - Same fields as campaign insights
+
+  9. GET /{ad_account_id}/insights
+     - Purpose: Account-level aggregated metrics
+     - Same fields as campaign insights
+
+All Insights Endpoints Support:
+  - Query Parameters: date_start, date_stop (date range filtering)
+  - Optional: breakdown_by=time,device,platform
+  - Optional: aggregation_unit=day,week,month
+
+================================================================================
+SECTION 3: WHERE ANALYTICS WOULD FIT IN THE UI
+================================================================================
+
+Current UI Navigation:
+  /dashboard (Main dashboard)
+    ├─ Campaign Overview (3 metric cards: active, paused, total)
+    ├─ Quick Actions (3 buttons)
+    │   ├─ View Campaigns → /dashboard/campaigns
+    │   ├─ View Rules → /dashboard/rules
+    │   └─ View Analytics → [PLACEHOLDER - "Coming soon"]
+    │
+    /dashboard/campaigns
+      ├─ Campaign Stats (3 metric cards: total, active, paused)
+      ├─ Search & Sort Controls
+      ├─ Campaign List (Expandable cards)
+      │   └─ Ad Sets (CampaignAdSets component)
+      │       └─ Ads (AdSetAds component)
+      │
+      /dashboard/rules
+        └─ Automated Rules Management
+
+PROPOSED ANALYTICS PLACEMENTS:
+
+Option 1: New Dedicated Analytics Dashboard Page (/dashboard/analytics)
+  - Account-level overview metrics (spend, impressions, clicks)
+  - Campaign performance comparison table
+  - Trend charts (daily/weekly spend, impressions, clicks)
+  - Top performing campaigns/ads
+  - Date range picker for custom periods
+  BEST FOR: Comprehensive analytics and reporting
+
+Option 2: Inline Metrics in Campaign Cards
+  - Existing campaign cards enhanced with:
+    ├─ Spend: $X.XX
+    ├─ Impressions: X,XXX
+    ├─ Clicks: XXX
+    ├─ CTR: X.XX%
+    └─ CPC: $X.XX
+  BEST FOR: Quick overview while managing campaigns
+
+Option 3: Analytics Tab/Sidebar
+  - New side section on dashboard alongside Quick Actions
+  - Show account-level metrics at a glance
+  - Links to detailed analytics page
+  BEST FOR: Always visible summary metrics
+
+Option 4: Campaign Details Modal
+  - Click campaign card to open modal with:
+    ├─ Overview metrics
+    ├─ Daily trend chart
+    ├─ Ad set performance breakdown
+    └─ Export options
+  BEST FOR: Detailed analysis without leaving campaign list
+
+RECOMMENDED: Combination of Option 1 (dedicated analytics page) + Option 2
+(inline metrics in cards) + Option 4 (details modal)
+
+================================================================================
+SECTION 4: DATA ALREADY BEING FETCHED
+================================================================================
+
+CAMPAIGN DATA (7 fields currently fetched):
+  ✓ id
+  ✓ name
+  ✓ status (ACTIVE/PAUSED/ARCHIVED/DELETED)
+  ✓ objective (campaign objective type)
+  ✓ created_time
+  ✓ updated_time
+  ✓ daily_budget (in cents, but not displayed)
+  ~ lifetime_budget (optional, rarely used)
+
+AD SET DATA (8 fields currently fetched):
+  ✓ id
+  ✓ name
+  ✓ campaign_id
+  ✓ status
+  ✓ targeting (configuration object, not displayed)
+  ✓ daily_budget (in cents, not displayed)
+  ~ lifetime_budget (optional)
+  ✓ created_time
+  ✓ updated_time
+
+AD DATA (8 fields currently fetched):
+  ✓ id
+  ✓ name
+  ✓ adset_id
+  ✓ campaign_id
+  ✓ status
+  ✓ creative (reference object, not fully displayed)
+  ✓ created_time
+  ✓ updated_time
+
+INSIGHTS DATA (NOT FETCHED - 15+ fields available):
+  Performance Metrics:
+    × impressions
+    × clicks
+    × spend
+    × reach
+    × frequency
+
+  Engagement Metrics:
+    × actions (conversions)
+    × action_values
+
+  Cost Metrics:
+    × ctr (click-through rate)
+    × cpc (cost per click)
+    × cpm (cost per thousand impressions)
+    × roas (return on ad spend - requires conversion tracking)
+
+  Time Data:
+    × date_start (metric start date)
+    × date_stop (metric end date)
+
+  Breakdown Options:
+    × Device breakdown (mobile, desktop, tablet)
+    × Platform breakdown (Facebook, Instagram, Audience Network)
+    × Demographic breakdown (age, gender, location)
+
+================================================================================
+SECTION 5: IMPLEMENTATION ROADMAP
+================================================================================
+
+FILES TO CREATE:
+  1. /lib/analytics-api.ts
+     - getCampaignInsights(campaignId, dateRange)
+     - getAdSetInsights(adSetId, dateRange)
+     - getAdInsights(adId, dateRange)
+     - getAccountInsights(accountId, dateRange)
+
+  2. /app/api/insights/campaigns/route.ts
+     - GET endpoint accepting: campaignId, date_start?, date_stop?
+     - Returns: CampaignInsights object
+
+  3. /app/api/insights/adsets/route.ts
+     - GET endpoint accepting: adSetId, date_start?, date_stop?
+
+  4. /app/api/insights/ads/route.ts
+     - GET endpoint accepting: adId, date_start?, date_stop?
+
+  5. /app/api/insights/account/route.ts
+     - GET endpoint accepting: adAccountId, date_start?, date_stop?
+
+  6. /app/components/PerformanceCard.tsx
+     - Reusable card component displaying: Spend, Impressions, Clicks, CTR, CPC
+
+  7. /app/components/MetricsChart.tsx
+     - Line chart component using Recharts
+     - Multiple series: Spend, Impressions, Clicks
+
+  8. /app/dashboard/analytics/page.tsx
+     - Full analytics dashboard page
+     - Account metrics overview
+     - Campaign performance table
+     - Trend charts
+     - Date range picker
+
+  9. /app/components/CampaignInsightsModal.tsx
+     - Modal showing campaign details
+     - Daily trend chart
+     - Ad set breakdown
+     - Export options
+
+FILES TO MODIFY:
+  1. /lib/types.ts
+     - Add CampaignInsights interface
+     - Add AdSetInsights interface
+     - Add AdInsights interface
+     - Add AnalyticsDateRange interface
+
+  2. /app/dashboard/page.tsx
+     - Replace "Analytics Coming Soon" button
+     - Link to /dashboard/analytics
+
+  3. /app/components/CampaignAdSets.tsx
+     - Add performance metrics display
+     - Add "View Analytics" button
+
+  4. /app/dashboard/campaigns/page.tsx
+     - Enhance campaign cards with metrics
+     - Add "View Analytics" button to each campaign
+
+TYPESCRIPT TYPES TO ADD:
+  interface CampaignInsights {
+    campaign_id: string;
+    spend: number;
+    impressions: number;
+    clicks: number;
+    reach?: number;
+    frequency?: number;
+    actions?: number;
+    action_values?: number;
+    ctr?: number;
+    cpc?: number;
+    cpm?: number;
+    date_start: string;
+    date_stop: string;
+  }
+
+  interface AdSetInsights {
+    adset_id: string;
+    campaign_id: string;
+    spend: number;
+    impressions: number;
+    clicks: number;
+    conversions?: number;
+    roas?: number;
+    cpc?: number;
+    cpm?: number;
+    date_start: string;
+    date_stop: string;
+  }
+
+  interface AdInsights {
+    ad_id: string;
+    adset_id: string;
+    spend: number;
+    impressions: number;
+    clicks: number;
+    actions?: number;
+    action_value?: number;
+    ctr?: number;
+    cpc?: number;
+    date_start: string;
+    date_stop: string;
+  }
+
+  interface AnalyticsDateRange {
+    start: Date;
+    end: Date;
+  }
+
+IMPLEMENTATION TIMELINE:
+  Phase 1: Foundation (1-2 days)
+    - Create analytics-api.ts with 4 functions
+    - Create /api/insights/campaigns route
+    - Create PerformanceCard component
+    - Add types to types.ts
+    - Update dashboard button
+
+  Phase 2: Dashboard (1-2 days)
+    - Create /dashboard/analytics page
+    - Create MetricsChart component
+    - Add date range picker
+    - Build campaign performance table
+    - Wire up remaining insight endpoints
+
+  Phase 3: Enhancement (1-2 days)
+    - Add metrics to campaign cards
+    - Create CampaignInsightsModal
+    - Add export functionality
+    - Performance optimization
+    - Testing
+
+  Phase 4: Advanced (2+ days, optional)
+    - Performance comparison tools
+    - Forecasting
+    - Automated alerts
+    - Scheduled email reports
+
+================================================================================
+SECTION 6: SUMMARY COMPARISON TABLE
+================================================================================
+
+Aspect              Current State              Gaps                          Opportunity
+─────────────────────────────────────────────────────────────────────────────────────────────
+Metrics Shown       Campaign/AdSet/Ad counts   No performance data           Add impressions, 
+                    + Status badges            Spend, CTR, CPC              clicks, spend metrics
+
+API Routes          5 routes (accounts,        No analytics route            Add /api/insights/*
+                    campaigns, adsets, ads,    implemented                   with 4 endpoints
+                    rules)
+
+Meta API Calls      Basic CRUD operations      Insights endpoints not        Implement
+                    (create, read, update,     called                        getInsights()
+                    delete)                                                   functions
+
+UI Components       Management-focused         No metrics display            Create
+                    cards & lists              components                    PerformanceCard,
+                                                                             MetricsChart
+
+Pages               Dashboard, Campaigns,      No analytics page             Create
+                    Rules (3 pages)                                          /dashboard/analytics
+
+Data Types          Campaign, AdSet, Ad        No insights types             Add 4 insights
+                    interfaces                                               interfaces
+
+Date Range          None - single point        Only current data shown       Add date picker,
+Support             metrics                                                   trend comparison
+
+Visualizations      Text-only metrics          No charts or graphs           Add Recharts line
+                                                                             charts
+
+Dashboard           "Analytics Coming Soon"    Non-functional                Replace with real
+Placeholder         button (opacity-50)        placeholder button            analytics page
+
+================================================================================
