@@ -49,6 +49,11 @@ function AnalyticsContent() {
     start: "",
     end: "",
   });
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof CampaignAnalytics | null;
+    direction: "asc" | "desc";
+  }>({ key: null, direction: "asc" });
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "PAUSED">("ALL");
 
   // Fetch ad accounts on component mount
   useEffect(() => {
@@ -165,6 +170,56 @@ function AnalyticsContent() {
 
   const formatPercent = (value: number) => {
     return value.toFixed(2) + "%";
+  };
+
+  // Sort and filter campaigns
+  const getSortedAndFilteredCampaigns = () => {
+    let filtered = campaigns;
+
+    // Apply status filter
+    if (statusFilter !== "ALL") {
+      filtered = campaigns.filter(
+        (c) => c.campaign_status === statusFilter
+      );
+    }
+
+    // Apply sorting
+    if (sortConfig.key) {
+      const sorted = [...filtered].sort((a, b) => {
+        const aValue = a[sortConfig.key!];
+        const bValue = b[sortConfig.key!];
+
+        if (typeof aValue === "number" && typeof bValue === "number") {
+          return sortConfig.direction === "asc"
+            ? aValue - bValue
+            : bValue - aValue;
+        }
+
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          return sortConfig.direction === "asc"
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+
+        return 0;
+      });
+      return sorted;
+    }
+
+    return filtered;
+  };
+
+  const handleSort = (key: keyof CampaignAnalytics) => {
+    setSortConfig((prev) => ({
+      key,
+      direction:
+        prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  const getSortIndicator = (columnKey: keyof CampaignAnalytics) => {
+    if (sortConfig.key !== columnKey) return " ↕️";
+    return sortConfig.direction === "asc" ? " ↑" : " ↓";
   };
 
   return (
@@ -488,6 +543,43 @@ function AnalyticsContent() {
             </p>
           </div>
 
+          {/* Filter Controls */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-6">
+            <label className="block text-sm md:text-base font-semibold text-gray-900 mb-3">
+              Filter by Status
+            </label>
+            <div className="flex flex-wrap gap-2 md:gap-3">
+              {(["ALL", "ACTIVE", "PAUSED"] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
+                    statusFilter === status
+                      ? "bg-poppy-dark-purple text-white shadow-lg"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {status === "ALL"
+                    ? "All Campaigns"
+                    : status === "ACTIVE"
+                      ? "🟢 Active"
+                      : "⏸️ Paused"}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs md:text-sm text-gray-500 mt-3">
+              Showing{" "}
+              <span className="font-semibold">
+                {getSortedAndFilteredCampaigns().length}
+              </span>{" "}
+              of{" "}
+              <span className="font-semibold">
+                {campaigns.length}
+              </span>{" "}
+              campaigns
+            </p>
+          </div>
+
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -496,23 +588,47 @@ function AnalyticsContent() {
                     <th className="px-4 md:px-6 py-4 text-left text-xs md:text-sm font-semibold text-gray-900">
                       Campaign
                     </th>
-                    <th className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900">
+                    <th
+                      onClick={() => handleSort("spend")}
+                      className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900 cursor-pointer hover:bg-poppy-light-purple/10 transition-colors"
+                    >
                       Spend
+                      {getSortIndicator("spend")}
                     </th>
-                    <th className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900">
+                    <th
+                      onClick={() => handleSort("impressions")}
+                      className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900 cursor-pointer hover:bg-poppy-light-purple/10 transition-colors"
+                    >
                       Impressions
+                      {getSortIndicator("impressions")}
                     </th>
-                    <th className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900">
+                    <th
+                      onClick={() => handleSort("clicks")}
+                      className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900 cursor-pointer hover:bg-poppy-light-purple/10 transition-colors"
+                    >
                       Clicks
+                      {getSortIndicator("clicks")}
                     </th>
-                    <th className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900">
+                    <th
+                      onClick={() => handleSort("ctr")}
+                      className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900 cursor-pointer hover:bg-poppy-light-purple/10 transition-colors"
+                    >
                       CTR
+                      {getSortIndicator("ctr")}
                     </th>
-                    <th className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900">
+                    <th
+                      onClick={() => handleSort("cpc")}
+                      className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900 cursor-pointer hover:bg-poppy-light-purple/10 transition-colors"
+                    >
                       CPC
+                      {getSortIndicator("cpc")}
                     </th>
-                    <th className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900">
+                    <th
+                      onClick={() => handleSort("cpm")}
+                      className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900 cursor-pointer hover:bg-poppy-light-purple/10 transition-colors"
+                    >
                       CPM
+                      {getSortIndicator("cpm")}
                     </th>
                     <th className="px-4 md:px-6 py-4 text-left text-xs md:text-sm font-semibold text-gray-900">
                       Status
@@ -520,7 +636,7 @@ function AnalyticsContent() {
                   </tr>
                 </thead>
                 <tbody>
-                  {campaigns.map((campaign, idx) => (
+                  {getSortedAndFilteredCampaigns().map((campaign, idx) => (
                     <tr
                       key={campaign.campaign_id}
                       className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
