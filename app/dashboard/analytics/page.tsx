@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Spinner } from "@/app/components/SkeletonLoaders";
+
+export const dynamic = "force-dynamic";
 
 interface AnalyticsMetrics {
   spend: number;
@@ -23,8 +27,15 @@ interface CampaignAnalytics extends AnalyticsMetrics {
   campaign_objective: string;
 }
 
-export default function AnalyticsDashboard() {
-  const [adAccountId, setAdAccountId] = useState("");
+function AnalyticsContent() {
+  const searchParams = useSearchParams();
+  const accountIdFromUrl = String(
+    searchParams.get("accountId") ||
+      localStorage.getItem("selectedAdAccountId") ||
+      ""
+  ).trim();
+
+  const [adAccountId, setAdAccountId] = useState(accountIdFromUrl);
   const [scope, setScope] = useState<"account" | "campaign">("account");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
@@ -37,13 +48,13 @@ export default function AnalyticsDashboard() {
     end: "",
   });
 
-  // Load saved ad account on mount
+  // Set ad account ID from URL or localStorage
   useEffect(() => {
-    const savedAdAccountId = localStorage.getItem("selectedAdAccountId");
-    if (savedAdAccountId) {
-      setAdAccountId(savedAdAccountId);
+    if (accountIdFromUrl) {
+      setAdAccountId(accountIdFromUrl);
+      localStorage.setItem("selectedAdAccountId", accountIdFromUrl);
     }
-  }, []);
+  }, [accountIdFromUrl]);
 
   // Set default date range (last 30 days)
   useEffect(() => {
@@ -523,5 +534,19 @@ export default function AnalyticsDashboard() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AnalyticsDashboard() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-64">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-poppy-dark-purple"></div>
+        </div>
+      }
+    >
+      <AnalyticsContent />
+    </Suspense>
   );
 }
