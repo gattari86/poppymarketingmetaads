@@ -60,6 +60,19 @@ export default function AppHeader() {
               )}
             </Link>
             <Link
+              href="/dashboard/analytics"
+              className={`font-medium transition-colors relative ${
+                isActive("/dashboard/analytics")
+                  ? "text-poppy-dark-purple"
+                  : "text-gray-700 hover:text-poppy-dark-purple"
+              }`}
+            >
+              Analytics
+              {isActive("/dashboard/analytics") && (
+                <span className="absolute -bottom-[21px] left-0 right-0 h-0.5 bg-poppy-dark-purple" />
+              )}
+            </Link>
+            <Link
               href="/dashboard/rules"
               className={`font-medium transition-colors relative ${
                 isActive("/dashboard/rules")

@@ -113,6 +113,18 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
               </li>
               <li>
                 <Link
+                  href="/dashboard/analytics"
+                  className={`block px-4 py-3 rounded-lg font-medium transition-colors ${
+                    isActive("/dashboard/analytics")
+                      ? "bg-poppy-dark-purple text-white"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  📊 Analytics
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/dashboard/rules"
                   className={`block px-4 py-3 rounded-lg font-medium transition-colors ${
                     isActive("/dashboard/rules")
