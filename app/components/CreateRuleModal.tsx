@@ -1,11 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface CreateRuleModalProps {
   accountId: string;
   onClose: () => void;
   onSuccess: () => void;
+}
+
+interface Campaign {
+  id: string;
+  name: string;
+  status: string;
+}
+
+interface AdSet {
+  id: string;
+  name: string;
+  campaign_name: string;
+  status: string;
 }
 
 type RuleType = "spend" | "roas" | "cpa" | "time";
@@ -43,6 +56,65 @@ export default function CreateRuleModal({
   const [unpauseHour, setUnpauseHour] = useState("9"); // 9 AM
   const [pauseDays, setPauseDays] = useState<string[]>(["Saturday", "Sunday"]); // Weekend by default
   const [timezone, setTimezone] = useState("America/Chicago"); // Default timezone
+
+  // Campaign and Ad Set Selection
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [adSets, setAdSets] = useState<AdSet[]>([]);
+  const [selectedCampaignId, setSelectedCampaignId] = useState("");
+  const [campaignsLoading, setCampaignsLoading] = useState(true);
+  const [adSetsLoading, setAdSetsLoading] = useState(false);
+
+  // Fetch campaigns on mount
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        const response = await fetch(`/api/campaigns?adAccountId=${accountId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setCampaigns(data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching campaigns:", error);
+      } finally {
+        setCampaignsLoading(false);
+      }
+    };
+
+    if (accountId) {
+      fetchCampaigns();
+    }
+  }, [accountId]);
+
+  // Fetch ad sets when campaign is selected
+  useEffect(() => {
+    const fetchAdSets = async () => {
+      if (!selectedCampaignId) {
+        setAdSets([]);
+        return;
+      }
+
+      setAdSetsLoading(true);
+      try {
+        const response = await fetch(
+          `/api/adsets?adAccountId=${accountId}&campaignId=${selectedCampaignId}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setAdSets(data || []);
+          // Auto-select first ad set if available
+          if (data && data.length > 0 && !adSetId) {
+            setAdSetId(data[0].id);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching ad sets:", error);
+      } finally {
+        setAdSetsLoading(false);
+      }
+    };
+
+    fetchAdSets();
+  }, [selectedCampaignId, accountId, adSetId]);
 
   const buildEvaluationSpec = () => {
     if (ruleType === "spend") {
@@ -767,21 +839,82 @@ export default function CreateRuleModal({
               </>
             )}
 
-            {/* Ad Set ID - Common */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ad Set ID
-              </label>
-              <input
-                type="text"
-                value={adSetId}
-                onChange={(e) => setAdSetId(e.target.value)}
-                placeholder="Enter the ad set ID to apply this rule to"
-                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Find this in your campaign's ad set details
-              </p>
+            {/* Campaign and Ad Set Selection */}
+            <div className="space-y-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+              {/* Campaign Selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Campaign
+                </label>
+                {campaignsLoading ? (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                    <p className="text-sm text-blue-700">Loading campaigns...</p>
+                  </div>
+                ) : (
+                  <select
+                    value={selectedCampaignId}
+                    onChange={(e) => {
+                      setSelectedCampaignId(e.target.value);
+                      setAdSetId(""); // Reset ad set when campaign changes
+                    }}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                  >
+                    <option value="">Select a campaign...</option>
+                    {campaigns.map((campaign) => (
+                      <option key={campaign.id} value={campaign.id}>
+                        {campaign.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {campaigns.length === 0 && !campaignsLoading && (
+                  <p className="text-xs text-red-600 mt-1">No campaigns found. Make sure you have active campaigns in this account.</p>
+                )}
+              </div>
+
+              {/* Ad Set Selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ad Set
+                </label>
+                {!selectedCampaignId ? (
+                  <div className="p-3 bg-gray-100 border border-gray-300 rounded-lg text-center">
+                    <p className="text-sm text-gray-600">Select a campaign first to see ad sets</p>
+                  </div>
+                ) : adSetsLoading ? (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                    <p className="text-sm text-blue-700">Loading ad sets...</p>
+                  </div>
+                ) : (
+                  <select
+                    value={adSetId}
+                    onChange={(e) => setAdSetId(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
+                  >
+                    <option value="">Select an ad set...</option>
+                    {adSets.map((adSet) => (
+                      <option key={adSet.id} value={adSet.id}>
+                        {adSet.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {selectedCampaignId && adSets.length === 0 && !adSetsLoading && (
+                  <p className="text-xs text-red-600 mt-1">No ad sets found for this campaign.</p>
+                )}
+              </div>
+
+              {/* Display Selected IDs */}
+              {adSetId && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-xs text-green-700">
+                    <span className="font-semibold">Rule will apply to:</span><br />
+                    Campaign: {campaigns.find((c) => c.id === selectedCampaignId)?.name}<br />
+                    Ad Set: {adSets.find((a) => a.id === adSetId)?.name}<br />
+                    <span className="text-gray-600">ID: {adSetId}</span>
+                  </p>
+                </div>
+              )}
             </div>
 
             {error && (
