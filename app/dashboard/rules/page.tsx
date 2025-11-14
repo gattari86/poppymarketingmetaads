@@ -15,20 +15,17 @@ interface Rule {
   status: string;
   evaluation_spec: {
     evaluation_type: string;
-    trigger: {
+    filters: Array<{
       field: string;
       operator: string;
-      value: number;
-    };
-    filters: any[];
+      value: any;
+    }>;
   };
   execution_spec: {
-    actions: Array<{
-      action_type: string;
-      action_params: {
-        ad_set_ids: string[];
-      };
-    }>;
+    execution_type: string;
+  };
+  schedule_spec?: {
+    schedule_type: string;
   };
   created_time: string;
   updated_time: string;
@@ -64,7 +61,12 @@ function RulesContent() {
   }, [accountId]);
 
   const getRuleTypeIcon = (rule: Rule) => {
-    const field = rule.evaluation_spec.trigger.field;
+    // Get the metric field from filters array
+    const metricFilter = rule.evaluation_spec.filters?.find(f =>
+      ["website_purchase_roas", "cost_per_purchase", "spend", "ctr"].includes(f.field)
+    );
+    const field = metricFilter?.field || "unknown";
+
     if (field === "spend") return "💰";
     if (field === "website_purchase_roas") return "📈";
     if (field === "cost_per_purchase") return "💵";
@@ -73,18 +75,32 @@ function RulesContent() {
   };
 
   const getRuleTypeLabel = (rule: Rule) => {
-    const field = rule.evaluation_spec.trigger.field;
+    // Get the metric field from filters array
+    const metricFilter = rule.evaluation_spec.filters?.find(f =>
+      ["website_purchase_roas", "cost_per_purchase", "spend", "ctr"].includes(f.field)
+    );
+    const field = metricFilter?.field || "unknown";
+
     if (field === "spend") return "Spend-Based";
     if (field === "website_purchase_roas") return "ROAS-Based";
     if (field === "cost_per_purchase") return "CPA-Based";
     if (field === "ctr") return "CTR-Based";
-    return "Unknown";
+    return "Time-Based";
   };
 
   const getMetricDisplay = (rule: Rule) => {
-    const field = rule.evaluation_spec.trigger.field;
-    const operator = rule.evaluation_spec.trigger.operator;
-    const value = rule.evaluation_spec.trigger.value;
+    // Get the metric field from filters array
+    const metricFilter = rule.evaluation_spec.filters?.find(f =>
+      ["website_purchase_roas", "cost_per_purchase", "spend", "ctr"].includes(f.field)
+    );
+
+    if (!metricFilter) {
+      return "Time-based scheduling";
+    }
+
+    const field = metricFilter.field;
+    const operator = metricFilter.operator;
+    const value = metricFilter.value;
 
     if (field === "spend") {
       return `Pause when spend > $${value}`;
@@ -102,9 +118,12 @@ function RulesContent() {
 
 
   const getActionLabel = (rule: Rule) => {
-    const action = rule.execution_spec.actions[0];
-    const adSetIds = action.action_params.ad_set_ids;
-    const isPause = action.action_type === "PAUSE";
+    // Get execution type and ad set from filters
+    const executionType = rule.execution_spec.execution_type || "PAUSE";
+    const adSetFilter = rule.evaluation_spec.filters?.find(f => f.field === "adset.id");
+    const adSetIds = adSetFilter?.value as string[] || [];
+    const isPause = executionType === "PAUSE";
+
     return `${isPause ? "Pause" : "Unpause"} ${adSetIds.length} ad set${adSetIds.length !== 1 ? "s" : ""}`;
   };
 

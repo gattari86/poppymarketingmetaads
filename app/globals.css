@@ -144,6 +144,8 @@ p {
   @apply bg-white rounded-2xl shadow-soft max-w-lg w-full mx-4;
   padding: var(--spacing-xl);
   animation: slideUp 0.3s ease-out;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 @keyframes fadeIn {
