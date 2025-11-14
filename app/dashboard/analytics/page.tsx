@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -112,7 +112,7 @@ function AnalyticsContent() {
     setDateStart(defaultStart);
   }, []);
 
-  const handleFetchAnalytics = async () => {
+  const handleFetchAnalytics = useCallback(async () => {
     if (!adAccountId || !dateStart || !dateEnd) {
       setError("Please select an ad account and date range");
       return;
@@ -196,7 +196,14 @@ function AnalyticsContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [adAccountId, dateStart, dateEnd, scope, selectedCampaignId, selectedAdsetId]);
+
+  // Auto-fetch when scope changes to adset or ad (for drilldown)
+  useEffect(() => {
+    if ((scope === "adset" || scope === "ad") && dateStart && dateEnd && adAccountId) {
+      handleFetchAnalytics();
+    }
+  }, [scope, selectedCampaignId, selectedAdsetId, handleFetchAnalytics]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
