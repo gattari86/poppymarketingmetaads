@@ -455,6 +455,26 @@ export async function createAutomatedRule(
   }
 }
 
+export async function deleteAutomatedRule(
+  ruleId: string,
+  accessToken: string
+) {
+  try {
+    const response = await metaApi.delete(
+      `/${ruleId}`,
+      {
+        params: {
+          access_token: accessToken,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting automated rule:", error);
+    throw error;
+  }
+}
+
 // Creative creation functions for programmatic ad creation
 export async function uploadAdImage(
   adAccountId: string,

@@ -37,6 +37,7 @@ function RulesContent() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [rules, setRules] = useState<Rule[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   // Fetch rules on mount
   useEffect(() => {
@@ -128,6 +129,32 @@ function RulesContent() {
     const isPause = executionType === "PAUSE";
 
     return `${isPause ? "Pause" : "Unpause"} ${adSetIds.length} ad set${adSetIds.length !== 1 ? "s" : ""}`;
+  };
+
+  const handleDeleteRule = async (ruleId: string, ruleName: string) => {
+    if (!confirm(`Are you sure you want to delete the rule "${ruleName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setDeleting(ruleId);
+    try {
+      const response = await fetch(`/api/rules?adAccountId=${accountId}&ruleId=${ruleId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setRules(rules.filter(r => r.id !== ruleId));
+        toast.success(`Rule "${ruleName}" deleted successfully`);
+      } else {
+        const error = await response.json();
+        toast.error(`Failed to delete rule: ${error.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error deleting rule:", error);
+      toast.error("Failed to delete rule");
+    } finally {
+      setDeleting(null);
+    }
   };
 
   if (!accountId) {
@@ -258,16 +285,24 @@ function RulesContent() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-col md:flex-row md:items-center">
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                        rule.status === "ACTIVE"
+                        rule.status === "ACTIVE" || rule.status === "ENABLED"
                           ? "bg-green-100 text-green-800"
                           : "bg-gray-100 text-gray-800"
                       }`}
                     >
-                      {rule.status === "ACTIVE" ? "🟢 Active" : "⏸️ Paused"}
+                      {rule.status === "ACTIVE" || rule.status === "ENABLED" ? "🟢 Active" : "⏸️ Paused"}
                     </span>
+                    <button
+                      onClick={() => handleDeleteRule(rule.id, rule.name)}
+                      disabled={deleting === rule.id}
+                      className="px-3 py-1 rounded-lg text-xs font-semibold bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Delete this rule"
+                    >
+                      {deleting === rule.id ? "Deleting..." : "🗑️ Delete"}
+                    </button>
                   </div>
                 </div>
               </div>
