@@ -74,21 +74,34 @@ export default function AnalyticsDashboard() {
         scope,
       });
 
+      console.log("📊 Fetching analytics with params:", {
+        adAccountId,
+        dateStart,
+        dateEnd,
+        scope,
+      });
+
       const response = await fetch(`/api/analytics?${params}`);
+
+      console.log("📊 API Response status:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error("❌ Analytics API error:", errorData);
         throw new Error(
           errorData.error || `Failed to fetch analytics (${response.status})`
         );
       }
 
       const data = await response.json();
+      console.log("📊 Analytics data received:", data);
 
       if (scope === "account") {
+        console.log("📊 Account metrics:", data.data.summary);
         setMetrics(data.data.summary);
         setCampaigns([]);
       } else {
+        console.log("📊 Campaign data:", data.data.campaigns);
         setMetrics(null);
         setCampaigns(data.data.campaigns || []);
       }
@@ -97,6 +110,7 @@ export default function AnalyticsDashboard() {
       toast.success("Analytics loaded successfully");
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "An error occurred";
+      console.error("❌ Analytics fetch error:", errorMsg);
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
