@@ -8,7 +8,7 @@ interface CreateRuleModalProps {
   onSuccess: () => void;
 }
 
-type RuleType = "spend" | "roas";
+type RuleType = "spend" | "roas" | "cpa";
 
 export default function CreateRuleModal({
   accountId,
@@ -30,6 +30,12 @@ export default function CreateRuleModal({
   const [roasUnpauseThreshold, setRoasUnpauseThreshold] = useState("2.00");
   const [roasTimeWindow, setRoasTimeWindow] = useState("7"); // days
   const [enableAutoUnpause, setEnableAutoUnpause] = useState(true);
+
+  // CPA Rule Fields
+  const [cpaPauseThreshold, setCpaPauseThreshold] = useState("50");
+  const [cpaUnpauseThreshold, setCpaUnpauseThreshold] = useState("40");
+  const [cpaTimeWindow, setCpaTimeWindow] = useState("7"); // days
+  const [enableCpaAutoUnpause, setEnableCpaAutoUnpause] = useState(true);
 
   const buildEvaluationSpec = () => {
     if (ruleType === "spend") {
@@ -56,6 +62,20 @@ export default function CreateRuleModal({
           },
         ],
         time_window: parseInt(roasTimeWindow),
+        trigger: "ALL",
+      };
+    }
+
+    if (ruleType === "cpa") {
+      return {
+        evaluations: [
+          {
+            metric: "cost_per_purchase",
+            comparison: "GREATER_THAN",
+            value: parseInt(cpaPauseThreshold),
+          },
+        ],
+        time_window: parseInt(cpaTimeWindow),
         trigger: "ALL",
       };
     }
@@ -110,6 +130,23 @@ export default function CreateRuleModal({
         }
         if (enableAutoUnpause && unpauseVal <= pauseVal) {
           throw new Error("Unpause threshold must be greater than pause threshold");
+        }
+      }
+
+      if (ruleType === "cpa") {
+        if (!cpaPauseThreshold) {
+          throw new Error("Please enter a CPA pause threshold");
+        }
+        if (enableCpaAutoUnpause && !cpaUnpauseThreshold) {
+          throw new Error("Please enter a CPA unpause threshold");
+        }
+        const pauseVal = parseInt(cpaPauseThreshold);
+        const unpauseVal = parseInt(cpaUnpauseThreshold);
+        if (pauseVal <= 0) {
+          throw new Error("CPA pause threshold must be greater than 0");
+        }
+        if (enableCpaAutoUnpause && unpauseVal >= pauseVal) {
+          throw new Error("Unpause threshold must be lower than pause threshold");
         }
       }
 
@@ -171,11 +208,48 @@ export default function CreateRuleModal({
         }
       }
 
+      // If CPA rule with auto-unpause, create companion unpause rule
+      if (ruleType === "cpa" && enableCpaAutoUnpause) {
+        const unpauseEvaluationSpec = {
+          evaluations: [
+            {
+              metric: "cost_per_purchase",
+              comparison: "LESS_THAN",
+              value: parseInt(cpaUnpauseThreshold),
+            },
+          ],
+          time_window: parseInt(cpaTimeWindow),
+          trigger: "ALL",
+        };
+
+        const unpauseExecutionSpec = buildExecutionSpec(false);
+
+        const unpauseRuleResponse = await fetch(
+          `/api/rules?adAccountId=${accountId}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: `${ruleName} (Auto-Unpause)`,
+              evaluation_spec: unpauseEvaluationSpec,
+              execution_spec: unpauseExecutionSpec,
+              status: "ACTIVE",
+            }),
+          }
+        );
+
+        if (!unpauseRuleResponse.ok) {
+          console.warn("Unpause rule creation failed, but pause rule succeeded");
+        }
+      }
+
       setSuccess(true);
       setRuleName("");
       setSpendThreshold("500");
       setRoasPauseThreshold("1.50");
       setRoasUnpauseThreshold("2.00");
+      setCpaPauseThreshold("50");
+      setCpaUnpauseThreshold("40");
       setAdSetId("");
 
       setTimeout(() => {
@@ -212,28 +286,39 @@ export default function CreateRuleModal({
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Rule Type
               </label>
-              <div className="flex gap-3">
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => setRuleType("spend")}
-                  className={`flex-1 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                  className={`px-4 py-3 rounded-lg font-medium text-sm transition-all ${
                     ruleType === "spend"
                       ? "bg-poppy-dark-purple text-white shadow-lg"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
-                  💰 Spend-Based
+                  💰 Spend
                 </button>
                 <button
                   type="button"
                   onClick={() => setRuleType("roas")}
-                  className={`flex-1 px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                  className={`px-4 py-3 rounded-lg font-medium text-sm transition-all ${
                     ruleType === "roas"
                       ? "bg-poppy-dark-purple text-white shadow-lg"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
-                  📈 ROAS-Based
+                  📈 ROAS
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRuleType("cpa")}
+                  className={`px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                    ruleType === "cpa"
+                      ? "bg-poppy-dark-purple text-white shadow-lg"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  💵 CPA
                 </button>
               </div>
             </div>
@@ -250,7 +335,9 @@ export default function CreateRuleModal({
                 placeholder={
                   ruleType === "spend"
                     ? "e.g., Pause when spend hits $500"
-                    : "e.g., Pause when ROAS drops below 1.5x"
+                    : ruleType === "roas"
+                    ? "e.g., Pause when ROAS drops below 1.5x"
+                    : "e.g., Pause when CPA exceeds $50"
                 }
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
               />
@@ -355,6 +442,91 @@ export default function CreateRuleModal({
                     </select>
                     <p className="text-xs text-gray-500 mt-1">
                       ROAS will be measured over this period
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* CPA Rule Fields */}
+            {ruleType === "cpa" && (
+              <>
+                <div className="space-y-3 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <p className="text-xs font-semibold text-orange-900 mb-2">
+                    💵 CPA Automation Settings
+                  </p>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Pause when CPA exceeds
+                    </label>
+                    <input
+                      type="number"
+                      value={cpaPauseThreshold}
+                      onChange={(e) => setCpaPauseThreshold(e.target.value)}
+                      min="1"
+                      max="9999"
+                      step="5"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      e.g., 50 means pause if CPA exceeds $50
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Auto-unpause when CPA improves?
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={enableCpaAutoUnpause}
+                        onChange={(e) => setEnableCpaAutoUnpause(e.target.checked)}
+                        className="w-4 h-4 text-poppy-dark-purple rounded"
+                      />
+                      <span className="text-sm text-gray-700">
+                        Yes, create auto-unpause rule
+                      </span>
+                    </label>
+                  </div>
+
+                  {enableCpaAutoUnpause && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Unpause when CPA drops below
+                      </label>
+                      <input
+                        type="number"
+                        value={cpaUnpauseThreshold}
+                        onChange={(e) => setCpaUnpauseThreshold(e.target.value)}
+                        min="1"
+                        max="9999"
+                        step="5"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple text-sm"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Must be lower than pause threshold
+                      </p>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Time Window
+                    </label>
+                    <select
+                      value={cpaTimeWindow}
+                      onChange={(e) => setCpaTimeWindow(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple text-sm"
+                    >
+                      <option value="1">Daily</option>
+                      <option value="7">7 Days (Weekly)</option>
+                      <option value="14">14 Days (Bi-weekly)</option>
+                      <option value="30">30 Days (Monthly)</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      CPA will be measured over this period
                     </p>
                   </div>
                 </div>
