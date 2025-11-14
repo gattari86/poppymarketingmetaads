@@ -117,20 +117,29 @@ export default function CreateRuleModal({
   }, [selectedCampaignId, accountId, adSetId]);
 
   const buildEvaluationSpec = () => {
-    // Meta's adrules_library API uses STATS_CHANGE trigger type for performance metrics
-    // evaluation_spec contains: evaluation_type, trigger (with type: "STATS_CHANGE", field, operator, value), and filters
-    // Valid trigger types: METADATA_CREATION, METADATA_UPDATE, STATS_MILESTONE, STATS_CHANGE, DELIVERY_INSIGHTS_CHANGE
+    // Meta's adrules_library API uses SCHEDULE evaluation type for automated pause/unpause
+    // evaluation_spec contains: evaluation_type and filters array
+    // Filters target specific metrics and ad sets
 
     if (ruleType === "spend") {
       return {
-        evaluation_type: "TRIGGER",
-        trigger: {
-          type: "STATS_CHANGE",
-          field: "spend",
-          operator: "GREATER_THAN",
-          value: parseInt(spendThreshold),
-        },
+        evaluation_type: "SCHEDULE",
         filters: [
+          {
+            field: "entity_type",
+            value: "ADSET",
+            operator: "EQUAL",
+          },
+          {
+            field: "adset.id",
+            value: [adSetId],
+            operator: "IN",
+          },
+          {
+            field: "spend",
+            operator: "GREATER_THAN",
+            value: parseInt(spendThreshold),
+          },
           {
             field: "time_preset",
             value: "TODAY",
@@ -142,14 +151,23 @@ export default function CreateRuleModal({
 
     if (ruleType === "roas") {
       return {
-        evaluation_type: "TRIGGER",
-        trigger: {
-          type: "STATS_CHANGE",
-          field: "website_purchase_roas",
-          operator: "LESS_THAN",
-          value: parseFloat(roasPauseThreshold),
-        },
+        evaluation_type: "SCHEDULE",
         filters: [
+          {
+            field: "entity_type",
+            value: "ADSET",
+            operator: "EQUAL",
+          },
+          {
+            field: "adset.id",
+            value: [adSetId],
+            operator: "IN",
+          },
+          {
+            field: "website_purchase_roas",
+            operator: "LESS_THAN",
+            value: parseFloat(roasPauseThreshold),
+          },
           {
             field: "time_preset",
             value: "LAST_7_DAYS",
@@ -161,14 +179,23 @@ export default function CreateRuleModal({
 
     if (ruleType === "cpa") {
       return {
-        evaluation_type: "TRIGGER",
-        trigger: {
-          type: "STATS_CHANGE",
-          field: "cost_per_purchase",
-          operator: "GREATER_THAN",
-          value: parseInt(cpaPauseThreshold),
-        },
+        evaluation_type: "SCHEDULE",
         filters: [
+          {
+            field: "entity_type",
+            value: "ADSET",
+            operator: "EQUAL",
+          },
+          {
+            field: "adset.id",
+            value: [adSetId],
+            operator: "IN",
+          },
+          {
+            field: "cost_per_purchase",
+            operator: "GREATER_THAN",
+            value: parseInt(cpaPauseThreshold),
+          },
           {
             field: "time_preset",
             value: "LAST_7_DAYS",
@@ -179,59 +206,32 @@ export default function CreateRuleModal({
     }
 
     if (ruleType === "time") {
-      // Time-based rules - use STATS_CHANGE with impressions as a gauge
-      // The actual scheduling is handled by the action execution
-      if (timeRuleType === "hourly") {
-        return {
-          evaluation_type: "TRIGGER",
-          trigger: {
-            type: "STATS_CHANGE",
-            field: "impressions",
-            operator: "GREATER_THAN_OR_EQUAL",
-            value: 0, // Always true
+      // Time-based rules using SCHEDULE evaluation
+      return {
+        evaluation_type: "SCHEDULE",
+        filters: [
+          {
+            field: "entity_type",
+            value: "ADSET",
+            operator: "EQUAL",
           },
-          filters: [
-            {
-              field: "time_preset",
-              value: "TODAY",
-              operator: "EQUAL",
-            },
-          ],
-        };
-      } else {
-        // Daily scheduling
-        return {
-          evaluation_type: "TRIGGER",
-          trigger: {
-            type: "STATS_CHANGE",
-            field: "impressions",
-            operator: "GREATER_THAN_OR_EQUAL",
-            value: 0, // Always true
+          {
+            field: "adset.id",
+            value: [adSetId],
+            operator: "IN",
           },
-          filters: [
-            {
-              field: "time_preset",
-              value: "TODAY",
-              operator: "EQUAL",
-            },
-          ],
-        };
-      }
+        ],
+      };
     }
 
     throw new Error("Invalid rule type");
   };
 
   const buildExecutionSpec = (isPauseRule: boolean) => {
+    // Meta's execution_spec uses execution_type directly (not nested actions array)
+    // Valid execution types: PAUSE, UNPAUSE, CHANGE_BUDGET, CHANGE_BID, NOTIFICATION, PING_ENDPOINT, etc.
     return {
-      actions: [
-        {
-          action_type: isPauseRule ? "PAUSE" : "UNPAUSE",
-          action_params: {
-            ad_set_ids: [adSetId],
-          },
-        },
-      ],
+      execution_type: isPauseRule ? "PAUSE" : "UNPAUSE",
     };
   };
 
@@ -319,6 +319,9 @@ export default function CreateRuleModal({
             name: ruleName,
             evaluation_spec,
             execution_spec,
+            schedule_spec: {
+              schedule_type: timeRuleType === "hourly" ? "HOURLY" : "DAILY",
+            },
             status: "ACTIVE",
           }),
         }
@@ -332,15 +335,29 @@ export default function CreateRuleModal({
       // If ROAS rule with auto-unpause, create companion unpause rule
       if (ruleType === "roas" && enableAutoUnpause) {
         const unpauseEvaluationSpec = {
-          evaluations: [
+          evaluation_type: "SCHEDULE",
+          filters: [
             {
-              metric: "website_purchase_roas",
-              comparison: "GREATER_THAN",
+              field: "entity_type",
+              value: "ADSET",
+              operator: "EQUAL",
+            },
+            {
+              field: "adset.id",
+              value: [adSetId],
+              operator: "IN",
+            },
+            {
+              field: "website_purchase_roas",
+              operator: "GREATER_THAN",
               value: parseFloat(roasUnpauseThreshold),
             },
+            {
+              field: "time_preset",
+              value: "LAST_7_DAYS",
+              operator: "EQUAL",
+            },
           ],
-          time_window: parseInt(roasTimeWindow),
-          trigger: "ALL",
         };
 
         const unpauseExecutionSpec = buildExecutionSpec(false);
@@ -354,6 +371,9 @@ export default function CreateRuleModal({
               name: `${ruleName} (Auto-Unpause)`,
               evaluation_spec: unpauseEvaluationSpec,
               execution_spec: unpauseExecutionSpec,
+              schedule_spec: {
+                schedule_type: "DAILY",
+              },
               status: "ACTIVE",
             }),
           }
@@ -367,15 +387,29 @@ export default function CreateRuleModal({
       // If CPA rule with auto-unpause, create companion unpause rule
       if (ruleType === "cpa" && enableCpaAutoUnpause) {
         const unpauseEvaluationSpec = {
-          evaluations: [
+          evaluation_type: "SCHEDULE",
+          filters: [
             {
-              metric: "cost_per_purchase",
-              comparison: "LESS_THAN",
+              field: "entity_type",
+              value: "ADSET",
+              operator: "EQUAL",
+            },
+            {
+              field: "adset.id",
+              value: [adSetId],
+              operator: "IN",
+            },
+            {
+              field: "cost_per_purchase",
+              operator: "LESS_THAN",
               value: parseInt(cpaUnpauseThreshold),
             },
+            {
+              field: "time_preset",
+              value: "LAST_7_DAYS",
+              operator: "EQUAL",
+            },
           ],
-          time_window: parseInt(cpaTimeWindow),
-          trigger: "ALL",
         };
 
         const unpauseExecutionSpec = buildExecutionSpec(false);
@@ -389,6 +423,9 @@ export default function CreateRuleModal({
               name: `${ruleName} (Auto-Unpause)`,
               evaluation_spec: unpauseEvaluationSpec,
               execution_spec: unpauseExecutionSpec,
+              schedule_spec: {
+                schedule_type: "DAILY",
+              },
               status: "ACTIVE",
             }),
           }
@@ -420,6 +457,9 @@ export default function CreateRuleModal({
               name: unpauseRuleName,
               evaluation_spec: unpauseEvaluationSpec,
               execution_spec: unpauseExecutionSpec,
+              schedule_spec: {
+                schedule_type: timeRuleType === "hourly" ? "HOURLY" : "DAILY",
+              },
               status: "ACTIVE",
             }),
           }
