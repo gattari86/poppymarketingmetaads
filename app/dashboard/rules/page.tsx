@@ -102,18 +102,21 @@ function RulesContent() {
     const operator = metricFilter.operator;
     const value = metricFilter.value;
 
+    // Safely convert value to number
+    const numValue = typeof value === "number" ? value : parseFloat(String(value));
+
     if (field === "spend") {
-      return `Pause when spend > $${value}`;
+      return `Pause when spend > $${numValue}`;
     }
     if (field === "website_purchase_roas") {
       const comp = operator === "LESS_THAN" ? "<" : ">";
-      return `Pause when ROAS ${comp} ${value.toFixed(2)}x`;
+      return `Pause when ROAS ${comp} ${numValue.toFixed(2)}x`;
     }
     if (field === "cost_per_purchase") {
       const comp = operator === "GREATER_THAN" ? ">" : "<";
-      return `Pause when CPA ${comp} $${value}`;
+      return `Pause when CPA ${comp} $${numValue}`;
     }
-    return `${field} ${operator} ${value}`;
+    return `${field} ${operator} ${numValue}`;
   };
 
 
