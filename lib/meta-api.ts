@@ -645,3 +645,278 @@ export async function createAdCreative(
     throw error;
   }
 }
+
+// Analytics/Insights functions
+export async function getAccountInsights(
+  adAccountId: string,
+  accessToken: string,
+  dateStart?: string | null,
+  dateEnd?: string | null
+) {
+  try {
+    const formattedId = formatAdAccountId(adAccountId);
+
+    // Default to last 30 days if no dates provided
+    let startDate = dateStart;
+    let endDate = dateEnd;
+
+    if (!startDate || !endDate) {
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      endDate = endDate || today.toISOString().split("T")[0];
+      startDate = startDate || thirtyDaysAgo.toISOString().split("T")[0];
+    }
+
+    console.log("📊 Fetching account insights for date range:", { startDate, endDate });
+
+    const response = await metaApi.get(`/${formattedId}/insights`, {
+      params: {
+        access_token: accessToken,
+        fields:
+          "campaign_id,spend,impressions,clicks,reach,frequency,ctr,cpc,cpp,cpm,actions,action_values,date_start,date_stop",
+        date_preset: "last_30d", // Fallback if dates not provided
+        time_range: JSON.stringify({
+          since: startDate,
+          until: endDate,
+        }),
+        level: "account",
+      },
+    });
+
+    console.log("📊 Account insights response:", response.data.data?.length, "records");
+
+    // Aggregate data
+    const aggregated = aggregateInsightsData(response.data.data || []);
+
+    return {
+      summary: aggregated,
+      detailed: response.data.data || [],
+      dateRange: {
+        start: startDate,
+        end: endDate,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching account insights:", error);
+    throw error;
+  }
+}
+
+export async function getCampaignInsights(
+  adAccountId: string,
+  accessToken: string,
+  dateStart?: string | null,
+  dateEnd?: string | null
+) {
+  try {
+    // Default to last 30 days if no dates provided
+    let startDate = dateStart;
+    let endDate = dateEnd;
+
+    if (!startDate || !endDate) {
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      endDate = endDate || today.toISOString().split("T")[0];
+      startDate = startDate || thirtyDaysAgo.toISOString().split("T")[0];
+    }
+
+    console.log("📊 Fetching campaign insights for date range:", { startDate, endDate });
+
+    // Get campaigns first
+    const campaigns = await getCampaigns(adAccountId, accessToken);
+
+    // Fetch insights for each campaign
+    const campaignInsights = await Promise.all(
+      campaigns.map(async (campaign: any) => {
+        try {
+          const response = await metaApi.get(`/${campaign.id}/insights`, {
+            params: {
+              access_token: accessToken,
+              fields:
+                "campaign_id,campaign_name,spend,impressions,clicks,reach,frequency,ctr,cpc,cpp,cpm,actions,action_values,date_start,date_stop",
+              time_range: JSON.stringify({
+                since: startDate,
+                until: endDate,
+              }),
+              level: "campaign",
+            },
+          });
+
+          // Sum up metrics across date range for this campaign
+          const campaignData = response.data.data || [];
+          const summed = sumInsightsMetrics(campaignData);
+
+          return {
+            campaign_id: campaign.id,
+            campaign_name: campaign.name,
+            campaign_status: campaign.status,
+            campaign_objective: campaign.objective,
+            ...summed,
+          };
+        } catch (err) {
+          console.error(`Error fetching insights for campaign ${campaign.id}:`, err);
+          return {
+            campaign_id: campaign.id,
+            campaign_name: campaign.name,
+            campaign_status: campaign.status,
+            error: "Failed to fetch insights",
+          };
+        }
+      })
+    );
+
+    return {
+      campaigns: campaignInsights,
+      dateRange: {
+        start: startDate,
+        end: endDate,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching campaign insights:", error);
+    throw error;
+  }
+}
+
+export async function getAdSetInsights(
+  campaignId: string,
+  accessToken: string,
+  dateStart?: string | null,
+  dateEnd?: string | null
+) {
+  try {
+    // Default to last 30 days if no dates provided
+    let startDate = dateStart;
+    let endDate = dateEnd;
+
+    if (!startDate || !endDate) {
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      endDate = endDate || today.toISOString().split("T")[0];
+      startDate = startDate || thirtyDaysAgo.toISOString().split("T")[0];
+    }
+
+    console.log("📊 Fetching ad set insights for date range:", { startDate, endDate });
+
+    const response = await metaApi.get(`/${campaignId}/insights`, {
+      params: {
+        access_token: accessToken,
+        fields:
+          "adset_id,adset_name,spend,impressions,clicks,reach,frequency,ctr,cpc,cpp,cpm,actions,action_values,date_start,date_stop",
+        time_range: JSON.stringify({
+          since: startDate,
+          until: endDate,
+        }),
+        level: "adset",
+      },
+    });
+
+    console.log("📊 Ad set insights response:", response.data.data?.length, "records");
+
+    return {
+      adsets: response.data.data || [],
+      dateRange: {
+        start: startDate,
+        end: endDate,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching ad set insights:", error);
+    throw error;
+  }
+}
+
+// Helper function to aggregate insights data
+function aggregateInsightsData(data: any[]) {
+  const aggregated = {
+    spend: 0,
+    impressions: 0,
+    clicks: 0,
+    reach: 0,
+    ctr: 0,
+    cpc: 0,
+    cpm: 0,
+    actions: 0,
+    action_value: 0,
+    records: data.length,
+  };
+
+  if (data.length === 0) return aggregated;
+
+  // Sum metrics
+  data.forEach((record) => {
+    aggregated.spend += parseFloat(record.spend || 0);
+    aggregated.impressions += parseInt(record.impressions || 0);
+    aggregated.clicks += parseInt(record.clicks || 0);
+    aggregated.reach += parseInt(record.reach || 0);
+    if (record.actions) {
+      const actions = Array.isArray(record.actions) ? record.actions : [record.actions];
+      aggregated.actions += actions.reduce((sum: number, a: any) => sum + (a.value || 0), 0);
+    }
+    if (record.action_values) {
+      const values = Array.isArray(record.action_values) ? record.action_values : [record.action_values];
+      aggregated.action_value += values.reduce((sum: number, v: any) => sum + (v.value || 0), 0);
+    }
+  });
+
+  // Calculate averages for rates
+  if (aggregated.impressions > 0) {
+    aggregated.ctr = (aggregated.clicks / aggregated.impressions) * 100;
+  }
+  if (aggregated.clicks > 0) {
+    aggregated.cpc = aggregated.spend / aggregated.clicks;
+  }
+  if (aggregated.impressions > 0) {
+    aggregated.cpm = (aggregated.spend / aggregated.impressions) * 1000;
+  }
+
+  return aggregated;
+}
+
+// Helper function to sum insights metrics for a single campaign
+function sumInsightsMetrics(data: any[]) {
+  const summed = {
+    spend: 0,
+    impressions: 0,
+    clicks: 0,
+    reach: 0,
+    ctr: 0,
+    cpc: 0,
+    cpm: 0,
+    actions: 0,
+    action_value: 0,
+  };
+
+  if (data.length === 0) return summed;
+
+  data.forEach((record) => {
+    summed.spend += parseFloat(record.spend || 0);
+    summed.impressions += parseInt(record.impressions || 0);
+    summed.clicks += parseInt(record.clicks || 0);
+    summed.reach += parseInt(record.reach || 0);
+    if (record.actions) {
+      const actions = Array.isArray(record.actions) ? record.actions : [record.actions];
+      summed.actions += actions.reduce((sum: number, a: any) => sum + (a.value || 0), 0);
+    }
+    if (record.action_values) {
+      const values = Array.isArray(record.action_values) ? record.action_values : [record.action_values];
+      summed.action_value += values.reduce((sum: number, v: any) => sum + (v.value || 0), 0);
+    }
+  });
+
+  // Calculate rates
+  if (summed.impressions > 0) {
+    summed.ctr = (summed.clicks / summed.impressions) * 100;
+  }
+  if (summed.clicks > 0) {
+    summed.cpc = summed.spend / summed.clicks;
+  }
+  if (summed.impressions > 0) {
+    summed.cpm = (summed.spend / summed.impressions) * 1000;
+  }
+
+  return summed;
+}

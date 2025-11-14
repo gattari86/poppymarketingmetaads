@@ -333,17 +333,20 @@ function DashboardContent() {
                   </p>
                 </Link>
 
-                <div className="card text-center opacity-50">
+                <Link
+                  href={`/dashboard/analytics?accountId=${selectedAccountId}`}
+                  className="card text-center hover:shadow-soft transition-shadow"
+                >
                   <div className="mb-3 flex justify-center">
-                    <TrendUp size={40} weight="duotone" className="text-gray-700" />
+                    <TrendUp size={40} weight="duotone" className="text-poppy-dark-purple" />
                   </div>
                   <h3 className="font-poppins font-semibold text-gray-900 mb-2">
                     Analytics
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Coming soon
+                    View campaign performance
                   </p>
-                </div>
+                </Link>
               </div>
             </div>
           )}
