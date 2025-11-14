@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { createAutomatedRule, getAutomatedRules, deleteAutomatedRule } from "@/lib/meta-api";
+import { createAutomatedRule, getAutomatedRules, deleteAutomatedRule, updateRuleStatus } from "@/lib/meta-api";
 import type { ExtendedSession } from "@/lib/types";
 
 export async function GET(request: Request) {
@@ -203,6 +203,80 @@ export async function DELETE(request: Request) {
 
     return Response.json(
       { error: "Failed to delete automated rule - Unknown error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  const session = (await getServerSession(authOptions)) as ExtendedSession;
+
+  if (!session?.accessToken) {
+    return Response.json(
+      { error: "Unauthorized - No access token" },
+      { status: 401 }
+    );
+  }
+
+  const url = new URL(request.url);
+  const ruleId = url.searchParams.get("ruleId");
+  const newStatus = url.searchParams.get("status");
+
+  if (!ruleId || !newStatus) {
+    return Response.json(
+      { error: "Missing required parameters: ruleId and status" },
+      { status: 400 }
+    );
+  }
+
+  if (!["ENABLED", "DISABLED"].includes(newStatus)) {
+    return Response.json(
+      { error: "Invalid status - must be ENABLED or DISABLED" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    // Update the rule status
+    const updateResult = await updateRuleStatus(ruleId, newStatus as "ENABLED" | "DISABLED", session.accessToken);
+
+    // Return success response
+    return Response.json({
+      success: true,
+      ruleId,
+      newStatus,
+      message: `Rule ${newStatus === "ENABLED" ? "resumed" : "paused"} successfully`,
+      updateResult,
+    });
+  } catch (error) {
+    console.error("Error updating rule status:", error);
+
+    if (error instanceof Error) {
+      const errorMessage = error.message;
+
+      if ("response" in error && typeof error.response === "object" && error.response !== null) {
+        const axiosError = error as any;
+        const metaErrorData = axiosError.response?.data;
+        if (metaErrorData?.error) {
+          return Response.json(
+            {
+              error: metaErrorData.error.message || metaErrorData.error.type || "Meta API Error",
+              code: metaErrorData.error.code,
+              details: metaErrorData.error,
+            },
+            { status: axiosError.response?.status || 500 }
+          );
+        }
+      }
+
+      return Response.json(
+        { error: errorMessage },
+        { status: 500 }
+      );
+    }
+
+    return Response.json(
+      { error: "Failed to update rule status - Unknown error" },
       { status: 500 }
     );
   }

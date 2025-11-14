@@ -38,6 +38,7 @@ function RulesContent() {
   const [rules, setRules] = useState<Rule[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [updating, setUpdating] = useState<string | null>(null);
 
   // Fetch rules on mount
   useEffect(() => {
@@ -160,6 +161,37 @@ function RulesContent() {
       toast.error("Failed to delete rule - network error");
     } finally {
       setDeleting(null);
+    }
+  };
+
+  const handleToggleRuleStatus = async (ruleId: string, currentStatus: string, ruleName: string) => {
+    const newStatus = (currentStatus === "ENABLED" || currentStatus === "ACTIVE") ? "DISABLED" : "ENABLED";
+    const action = newStatus === "ENABLED" ? "resume" : "pause";
+
+    setUpdating(ruleId);
+    try {
+      const response = await fetch(`/api/rules?ruleId=${ruleId}&status=${newStatus}`, {
+        method: "PATCH",
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Update the rule in local state
+        setRules(
+          rules.map(r =>
+            r.id === ruleId ? { ...r, status: newStatus } : r
+          )
+        );
+        toast.success(`✅ Rule "${ruleName}" ${action}d successfully`);
+      } else {
+        toast.error(`❌ Failed to ${action} rule: ${data.error || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error updating rule status:", error);
+      toast.error(`Failed to ${action} rule - network error`);
+    } finally {
+      setUpdating(null);
     }
   };
 
@@ -291,7 +323,7 @@ function RulesContent() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 flex-col md:flex-row md:items-center">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
                         rule.status === "ACTIVE" || rule.status === "ENABLED"
@@ -301,6 +333,18 @@ function RulesContent() {
                     >
                       {rule.status === "ACTIVE" || rule.status === "ENABLED" ? "🟢 Active" : "⏸️ Paused"}
                     </span>
+                    <button
+                      onClick={() => handleToggleRuleStatus(rule.id, rule.status, rule.name)}
+                      disabled={updating === rule.id}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                        rule.status === "ACTIVE" || rule.status === "ENABLED"
+                          ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                          : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+                      }`}
+                      title={rule.status === "ACTIVE" || rule.status === "ENABLED" ? "Pause this rule" : "Resume this rule"}
+                    >
+                      {updating === rule.id ? "Updating..." : (rule.status === "ACTIVE" || rule.status === "ENABLED" ? "⏸️ Pause" : "▶️ Resume")}
+                    </button>
                     <button
                       onClick={() => handleDeleteRule(rule.id, rule.name)}
                       disabled={deleting === rule.id}

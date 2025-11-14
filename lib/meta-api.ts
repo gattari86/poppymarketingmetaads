@@ -475,6 +475,30 @@ export async function deleteAutomatedRule(
   }
 }
 
+export async function updateRuleStatus(
+  ruleId: string,
+  status: "ENABLED" | "DISABLED",
+  accessToken: string
+) {
+  try {
+    const response = await metaApi.post(
+      `/${ruleId}`,
+      {
+        status,
+      },
+      {
+        params: {
+          access_token: accessToken,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating rule status:", error);
+    throw error;
+  }
+}
+
 // Creative creation functions for programmatic ad creation
 export async function uploadAdImage(
   adAccountId: string,
