@@ -27,6 +27,18 @@ interface CampaignAnalytics extends AnalyticsMetrics {
   campaign_objective: string;
 }
 
+interface AdSetAnalytics extends AnalyticsMetrics {
+  adset_id: string;
+  adset_name: string;
+  campaign_id?: string;
+}
+
+interface AdAnalytics extends AnalyticsMetrics {
+  ad_id: string;
+  ad_name: string;
+  adset_id?: string;
+}
+
 function AnalyticsContent() {
   const searchParams = useSearchParams();
   const accountIdFromUrl = String(
@@ -38,13 +50,19 @@ function AnalyticsContent() {
   const [adAccountId, setAdAccountId] = useState(accountIdFromUrl);
   const [adAccounts, setAdAccounts] = useState<any[]>([]);
   const [accountsLoading, setAccountsLoading] = useState(true);
-  const [scope, setScope] = useState<"account" | "campaign">("account");
+  const [scope, setScope] = useState<"account" | "campaign" | "adset" | "ad">("account");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [metrics, setMetrics] = useState<AnalyticsMetrics | null>(null);
   const [campaigns, setCampaigns] = useState<CampaignAnalytics[]>([]);
+  const [adsets, setAdsets] = useState<AdSetAnalytics[]>([]);
+  const [ads, setAds] = useState<AdAnalytics[]>([]);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [selectedCampaignName, setSelectedCampaignName] = useState<string>("");
+  const [selectedAdsetId, setSelectedAdsetId] = useState<string | null>(null);
+  const [selectedAdsetName, setSelectedAdsetName] = useState<string>("");
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
     start: "",
     end: "",
@@ -111,11 +129,20 @@ function AnalyticsContent() {
         scope,
       });
 
+      // Add parent IDs for hierarchy drilldown
+      if (scope === "adset" && selectedCampaignId) {
+        params.append("campaignId", selectedCampaignId);
+      } else if (scope === "ad" && selectedAdsetId) {
+        params.append("adsetId", selectedAdsetId);
+      }
+
       console.log("📊 Fetching analytics with params:", {
         adAccountId,
         dateStart,
         dateEnd,
         scope,
+        campaignId: selectedCampaignId,
+        adsetId: selectedAdsetId,
       });
 
       const response = await fetch(`/api/analytics?${params}`);
@@ -137,10 +164,26 @@ function AnalyticsContent() {
         console.log("📊 Account metrics:", data.data.summary);
         setMetrics(data.data.summary);
         setCampaigns([]);
-      } else {
+        setAdsets([]);
+        setAds([]);
+      } else if (scope === "campaign") {
         console.log("📊 Campaign data:", data.data.campaigns);
         setMetrics(null);
         setCampaigns(data.data.campaigns || []);
+        setAdsets([]);
+        setAds([]);
+      } else if (scope === "adset") {
+        console.log("📊 Ad set data:", data.data.adsets);
+        setMetrics(null);
+        setCampaigns([]);
+        setAdsets(data.data.adsets || []);
+        setAds([]);
+      } else if (scope === "ad") {
+        console.log("📊 Ad data:", data.data.ads);
+        setMetrics(null);
+        setCampaigns([]);
+        setAdsets([]);
+        setAds(data.data.ads || []);
       }
 
       setDateRange(data.data.dateRange);
@@ -307,6 +350,56 @@ function AnalyticsContent() {
             </button>
           </div>
         </div>
+
+        {/* Breadcrumb Navigation */}
+        {(scope === "adset" || scope === "ad") && (
+          <div className="flex items-center gap-2 text-sm md:text-base font-medium text-gray-700 max-w-md flex-wrap">
+            <button
+              onClick={() => {
+                setScope("campaign");
+                setSelectedCampaignId(null);
+                setSelectedCampaignName("");
+                setAdsets([]);
+                setAds([]);
+              }}
+              className="text-poppy-dark-purple hover:underline"
+            >
+              Campaigns
+            </button>
+            {scope === "adset" || scope === "ad" ? (
+              <>
+                <span className="text-gray-400">/</span>
+                {scope === "adset" ? (
+                  <span className="text-gray-700">{selectedCampaignName}</span>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        setScope("adset");
+                        setAds([]);
+                      }}
+                      className="text-poppy-dark-purple hover:underline"
+                    >
+                      {selectedCampaignName}
+                    </button>
+                    <span className="text-gray-400">/</span>
+                    <button
+                      onClick={() => {
+                        setScope("adset");
+                        setAds([]);
+                      }}
+                      className="text-poppy-dark-purple hover:underline"
+                    >
+                      Ad Sets
+                    </button>
+                    <span className="text-gray-400">/</span>
+                    <span className="text-gray-700">{selectedAdsetName}</span>
+                  </>
+                )}
+              </>
+            ) : null}
+          </div>
+        )}
 
         {/* Date Range Picker */}
         <div>
@@ -639,7 +732,13 @@ function AnalyticsContent() {
                   {getSortedAndFilteredCampaigns().map((campaign, idx) => (
                     <tr
                       key={campaign.campaign_id}
-                      className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+                      onClick={() => {
+                        setSelectedCampaignId(campaign.campaign_id);
+                        setSelectedCampaignName(campaign.campaign_name);
+                        setScope("adset");
+                        setAdsets([]);
+                      }}
+                      className={`border-b border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer ${
                         idx % 2 === 0 ? "bg-white" : "bg-gray-50"
                       }`}
                     >
@@ -691,8 +790,170 @@ function AnalyticsContent() {
         </div>
       )}
 
+      {/* Ad Set Performance Table */}
+      {scope === "adset" && adsets.length > 0 && !loading && (
+        <div>
+          <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200">
+            <div className="px-6 md:px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-poppy-light-purple/20 to-poppy-light-purple/10">
+              <h2 className="text-xl md:text-2xl font-poppins font-bold text-gray-900 flex items-center gap-3">
+                <span>📊</span> Ad Set Performance ({adsets.length})
+              </h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Ad Set
+                    </th>
+                    <th className="px-4 md:px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Spend
+                    </th>
+                    <th className="px-4 md:px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Impressions
+                    </th>
+                    <th className="px-4 md:px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Clicks
+                    </th>
+                    <th className="px-4 md:px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      CTR
+                    </th>
+                    <th className="px-4 md:px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      CPC
+                    </th>
+                    <th className="px-4 md:px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      CPM
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {adsets.map((adset, idx) => (
+                    <tr
+                      key={adset.adset_id}
+                      onClick={() => {
+                        setSelectedAdsetId(adset.adset_id);
+                        setSelectedAdsetName(adset.adset_name);
+                        setScope("ad");
+                        setAds([]);
+                      }}
+                      className={`border-b border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer ${
+                        idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`}
+                    >
+                      <td className="px-4 md:px-6 py-4">
+                        <div>
+                          <p className="font-semibold text-xs md:text-sm text-gray-900">
+                            {adset.adset_name}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900">
+                        {formatCurrency(adset.spend)}
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right text-xs md:text-sm text-gray-700">
+                        {formatNumber(adset.impressions)}
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right text-xs md:text-sm text-gray-700">
+                        {formatNumber(adset.clicks)}
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right text-xs md:text-sm text-gray-700">
+                        {formatPercent(adset.ctr)}
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right text-xs md:text-sm text-gray-700">
+                        {formatCurrency(adset.cpc)}
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right text-xs md:text-sm text-gray-700">
+                        {formatCurrency(adset.cpm)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ad Performance Table */}
+      {scope === "ad" && ads.length > 0 && !loading && (
+        <div>
+          <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200">
+            <div className="px-6 md:px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-poppy-light-purple/20 to-poppy-light-purple/10">
+              <h2 className="text-xl md:text-2xl font-poppins font-bold text-gray-900 flex items-center gap-3">
+                <span>📢</span> Individual Ad Performance ({ads.length})
+              </h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 md:px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Ad Name
+                    </th>
+                    <th className="px-4 md:px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Spend
+                    </th>
+                    <th className="px-4 md:px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Impressions
+                    </th>
+                    <th className="px-4 md:px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Clicks
+                    </th>
+                    <th className="px-4 md:px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      CTR
+                    </th>
+                    <th className="px-4 md:px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      CPC
+                    </th>
+                    <th className="px-4 md:px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      CPM
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ads.map((ad, idx) => (
+                    <tr
+                      key={ad.ad_id}
+                      className={`border-b border-gray-200 hover:bg-gray-50 transition-colors ${
+                        idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`}
+                    >
+                      <td className="px-4 md:px-6 py-4">
+                        <div>
+                          <p className="font-semibold text-xs md:text-sm text-gray-900">
+                            {ad.ad_name}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right text-xs md:text-sm font-semibold text-gray-900">
+                        {formatCurrency(ad.spend)}
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right text-xs md:text-sm text-gray-700">
+                        {formatNumber(ad.impressions)}
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right text-xs md:text-sm text-gray-700">
+                        {formatNumber(ad.clicks)}
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right text-xs md:text-sm text-gray-700">
+                        {formatPercent(ad.ctr)}
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right text-xs md:text-sm text-gray-700">
+                        {formatCurrency(ad.cpc)}
+                      </td>
+                      <td className="px-4 md:px-6 py-4 text-right text-xs md:text-sm text-gray-700">
+                        {formatCurrency(ad.cpm)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Empty State */}
-      {!metrics && campaigns.length === 0 && !loading && !error && (
+      {!metrics && campaigns.length === 0 && adsets.length === 0 && ads.length === 0 && !loading && !error && (
         <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center">
           <div className="text-5xl mb-4">📊</div>
           <p className="text-lg font-semibold text-gray-900 mb-2">

@@ -873,6 +873,55 @@ export async function getAdSetInsights(
   }
 }
 
+export async function getAdInsights(
+  adSetId: string,
+  accessToken: string,
+  dateStart?: string | null,
+  dateEnd?: string | null
+) {
+  try {
+    // Default to last 30 days if no dates provided
+    let startDate = dateStart;
+    let endDate = dateEnd;
+
+    if (!startDate || !endDate) {
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      endDate = endDate || today.toISOString().split("T")[0];
+      startDate = startDate || thirtyDaysAgo.toISOString().split("T")[0];
+    }
+
+    console.log("📊 Fetching ad insights for date range:", { startDate, endDate });
+
+    const response = await metaApi.get(`/${adSetId}/insights`, {
+      params: {
+        access_token: accessToken,
+        fields:
+          "ad_id,ad_name,spend,impressions,clicks,reach,frequency,ctr,cpc,cpp,cpm,actions,action_values,date_start,date_stop",
+        time_range: JSON.stringify({
+          since: startDate,
+          until: endDate,
+        }),
+        level: "ad",
+      },
+    });
+
+    console.log("📊 Ad insights response:", response.data.data?.length, "records");
+
+    return {
+      ads: response.data.data || [],
+      dateRange: {
+        start: startDate,
+        end: endDate,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching ad insights:", error);
+    throw error;
+  }
+}
+
 // Helper function to aggregate insights data
 function aggregateInsightsData(data: any[]) {
   const aggregated = {

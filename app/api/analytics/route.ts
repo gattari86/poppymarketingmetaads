@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getCampaignInsights, getAccountInsights } from "@/lib/meta-api";
+import { getCampaignInsights, getAccountInsights, getAdSetInsights, getAdInsights } from "@/lib/meta-api";
 import type { ExtendedSession } from "@/lib/types";
 
 export async function GET(request: Request) {
@@ -17,7 +17,9 @@ export async function GET(request: Request) {
   const adAccountId = url.searchParams.get("adAccountId");
   const dateStart = url.searchParams.get("dateStart");
   const dateEnd = url.searchParams.get("dateEnd");
-  const scope = url.searchParams.get("scope") || "account"; // "account" or "campaign"
+  const scope = url.searchParams.get("scope") || "account"; // "account", "campaign", "adset", or "ad"
+  const campaignId = url.searchParams.get("campaignId");
+  const adsetId = url.searchParams.get("adsetId");
 
   if (!adAccountId) {
     return Response.json(
@@ -29,7 +31,35 @@ export async function GET(request: Request) {
   try {
     let analyticsData;
 
-    if (scope === "campaign") {
+    if (scope === "adset") {
+      // Fetch ad set-level insights
+      if (!campaignId) {
+        return Response.json(
+          { error: "Missing required parameter for adset scope: campaignId" },
+          { status: 400 }
+        );
+      }
+      analyticsData = await getAdSetInsights(
+        campaignId,
+        session.accessToken,
+        dateStart,
+        dateEnd
+      );
+    } else if (scope === "ad") {
+      // Fetch ad-level insights
+      if (!adsetId) {
+        return Response.json(
+          { error: "Missing required parameter for ad scope: adsetId" },
+          { status: 400 }
+        );
+      }
+      analyticsData = await getAdInsights(
+        adsetId,
+        session.accessToken,
+        dateStart,
+        dateEnd
+      );
+    } else if (scope === "campaign") {
       // Fetch campaign-level insights
       analyticsData = await getCampaignInsights(
         adAccountId,
