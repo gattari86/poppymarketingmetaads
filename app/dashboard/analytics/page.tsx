@@ -36,6 +36,8 @@ function AnalyticsContent() {
   ).trim();
 
   const [adAccountId, setAdAccountId] = useState(accountIdFromUrl);
+  const [adAccounts, setAdAccounts] = useState<any[]>([]);
+  const [accountsLoading, setAccountsLoading] = useState(true);
   const [scope, setScope] = useState<"account" | "campaign">("account");
   const [dateStart, setDateStart] = useState("");
   const [dateEnd, setDateEnd] = useState("");
@@ -47,6 +49,25 @@ function AnalyticsContent() {
     start: "",
     end: "",
   });
+
+  // Fetch ad accounts on component mount
+  useEffect(() => {
+    const fetchAdAccounts = async () => {
+      try {
+        const response = await fetch("/api/ad-accounts");
+        if (response.ok) {
+          const accounts = await response.json();
+          setAdAccounts(accounts);
+        }
+      } catch (err) {
+        console.error("Error fetching ad accounts:", err);
+      } finally {
+        setAccountsLoading(false);
+      }
+    };
+
+    fetchAdAccounts();
+  }, []);
 
   // Set ad account ID from URL or localStorage
   useEffect(() => {
@@ -161,6 +182,40 @@ function AnalyticsContent() {
 
       {/* Controls */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 space-y-6">
+        {/* Account Selector */}
+        <div>
+          <label className="block text-sm md:text-base font-semibold text-gray-900 mb-3">
+            Ad Account
+          </label>
+          {accountsLoading ? (
+            <div className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-500">
+              Loading accounts...
+            </div>
+          ) : adAccounts.length === 0 ? (
+            <div className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg bg-gray-50 text-gray-500">
+              No ad accounts found
+            </div>
+          ) : (
+            <select
+              value={adAccountId}
+              onChange={(e) => {
+                setAdAccountId(e.target.value);
+                localStorage.setItem("selectedAdAccountId", e.target.value);
+                setMetrics(null);
+                setCampaigns([]);
+              }}
+              className="w-full max-w-md px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple focus:border-transparent transition-all bg-white font-medium text-gray-900"
+            >
+              <option value="">-- Select an account --</option>
+              {adAccounts.map((account) => (
+                <option key={account.account_id} value={account.account_id}>
+                  {account.name} ({account.currency})
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
         {/* Scope Toggle */}
         <div>
           <label className="block text-sm md:text-base font-semibold text-gray-900 mb-3">
