@@ -118,12 +118,13 @@ export default function CreateRuleModal({
 
   const buildEvaluationSpec = () => {
     // Meta's adrules_library API uses a trigger-based structure
-    // evaluation_spec contains: evaluation_type, trigger (with field, operator, value), and filters
+    // evaluation_spec contains: evaluation_type, trigger (with type, field, operator, value), and filters
 
     if (ruleType === "spend") {
       return {
         evaluation_type: "TRIGGER",
         trigger: {
+          type: "PERFORMANCE_CONDITION",
           field: "spend",
           operator: "GREATER_THAN",
           value: parseInt(spendThreshold),
@@ -136,6 +137,7 @@ export default function CreateRuleModal({
       return {
         evaluation_type: "TRIGGER",
         trigger: {
+          type: "PERFORMANCE_CONDITION",
           field: "website_purchase_roas",
           operator: "LESS_THAN",
           value: parseFloat(roasPauseThreshold),
@@ -148,6 +150,7 @@ export default function CreateRuleModal({
       return {
         evaluation_type: "TRIGGER",
         trigger: {
+          type: "PERFORMANCE_CONDITION",
           field: "cost_per_purchase",
           operator: "GREATER_THAN",
           value: parseInt(cpaPauseThreshold),
@@ -163,6 +166,7 @@ export default function CreateRuleModal({
         return {
           evaluation_type: "TRIGGER",
           trigger: {
+            type: "PERFORMANCE_CONDITION",
             field: "impressions",
             operator: "GREATER_THAN_OR_EQUAL",
             value: 0, // Always true
@@ -174,6 +178,7 @@ export default function CreateRuleModal({
         return {
           evaluation_type: "TRIGGER",
           trigger: {
+            type: "PERFORMANCE_CONDITION",
             field: "impressions",
             operator: "GREATER_THAN_OR_EQUAL",
             value: 0, // Always true
