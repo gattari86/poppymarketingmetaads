@@ -142,16 +142,22 @@ function RulesContent() {
         method: "DELETE",
       });
 
-      if (response.ok) {
+      const data = await response.json();
+
+      if (response.ok && data.verified) {
+        // Rule was deleted AND verified as removed from Meta API
         setRules(rules.filter(r => r.id !== ruleId));
-        toast.success(`Rule "${ruleName}" deleted successfully`);
+        toast.success(`✅ Rule "${ruleName}" deleted and verified removed from Meta API`);
+      } else if (response.ok && !data.verified) {
+        // Delete succeeded but verification failed
+        toast.error(`⚠️ Rule deletion may have failed - rule still exists in Meta API`);
       } else {
-        const error = await response.json();
-        toast.error(`Failed to delete rule: ${error.error || "Unknown error"}`);
+        // Delete request failed
+        toast.error(`❌ Failed to delete rule: ${data.error || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Error deleting rule:", error);
-      toast.error("Failed to delete rule");
+      toast.error("Failed to delete rule - network error");
     } finally {
       setDeleting(null);
     }

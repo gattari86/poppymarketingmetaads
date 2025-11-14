@@ -148,8 +148,32 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const result = await deleteAutomatedRule(ruleId, session.accessToken);
-    return Response.json(result);
+    // Delete the rule
+    const deleteResult = await deleteAutomatedRule(ruleId, session.accessToken);
+
+    // Verify the rule is actually deleted by fetching the rules list
+    const rulesAfterDelete = await getAutomatedRules(adAccountId, session.accessToken);
+    const ruleStillExists = rulesAfterDelete.some((rule: any) => rule.id === ruleId);
+
+    if (ruleStillExists) {
+      return Response.json(
+        {
+          error: "Rule deletion verification failed - rule still exists in Meta API",
+          ruleId,
+          stillExists: true,
+        },
+        { status: 500 }
+      );
+    }
+
+    // Return success with verification confirmation
+    return Response.json({
+      success: true,
+      ruleId,
+      verified: true,
+      message: "Rule successfully deleted and verified removed from Meta API",
+      deleteResult,
+    });
   } catch (error) {
     console.error("Error deleting automated rule:", error);
 
