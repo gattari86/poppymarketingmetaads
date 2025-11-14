@@ -6,6 +6,7 @@ interface CreateRuleModalProps {
   accountId: string;
   onClose: () => void;
   onSuccess: () => void;
+  editingRule?: any;
 }
 
 interface Campaign {
@@ -27,6 +28,7 @@ export default function CreateRuleModal({
   accountId,
   onClose,
   onSuccess,
+  editingRule,
 }: CreateRuleModalProps) {
   const [ruleType, setRuleType] = useState<RuleType>("roas");
   const [ruleName, setRuleName] = useState("");
@@ -34,6 +36,7 @@ export default function CreateRuleModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const isEditing = !!editingRule;
 
   // ROAS Rule Fields
   const [roasPauseThreshold, setRoasPauseThreshold] = useState("1.50");
@@ -62,6 +65,46 @@ export default function CreateRuleModal({
   const [adSetsLoading, setAdSetsLoading] = useState(false);
 
   // Fetch campaigns on mount
+  // Populate form when editing a rule
+  useEffect(() => {
+    if (isEditing && editingRule) {
+      setRuleName(editingRule.name || "");
+
+      // Extract rule type and values from evaluation_spec
+      const metricFilter = editingRule.evaluation_spec?.filters?.find((f: any) =>
+        ["website_purchase_roas", "cost_per_purchase"].includes(f.field)
+      );
+
+      if (metricFilter?.field === "website_purchase_roas") {
+        setRuleType("roas");
+        const pauseFilter = editingRule.evaluation_spec?.filters?.find((f: any) =>
+          f.field === "website_purchase_roas"
+        );
+        if (pauseFilter) {
+          setRoasPauseThreshold(String(pauseFilter.value || "1.50"));
+        }
+      } else if (metricFilter?.field === "cost_per_purchase") {
+        setRuleType("cpa");
+        const pauseFilter = editingRule.evaluation_spec?.filters?.find((f: any) =>
+          f.field === "cost_per_purchase"
+        );
+        if (pauseFilter) {
+          setCpaPauseThreshold(String(pauseFilter.value || "50"));
+        }
+      } else {
+        setRuleType("time");
+      }
+
+      // Extract ad set ID
+      const adSetFilter = editingRule.evaluation_spec?.filters?.find((f: any) =>
+        f.field === "adset.id"
+      );
+      if (adSetFilter?.value?.[0]) {
+        setAdSetId(adSetFilter.value[0]);
+      }
+    }
+  }, [isEditing, editingRule]);
+
   useEffect(() => {
     const fetchCampaigns = async () => {
       try {
@@ -212,6 +255,19 @@ export default function CreateRuleModal({
     setSuccess(false);
 
     try {
+      // If editing, delete the old rule first
+      if (isEditing && editingRule) {
+        const deleteResponse = await fetch(
+          `/api/rules?adAccountId=${accountId}&ruleId=${editingRule.id}`,
+          { method: "DELETE" }
+        );
+
+        if (!deleteResponse.ok) {
+          const deleteError = await deleteResponse.json();
+          throw new Error(`Failed to delete old rule: ${deleteError.error || "Unknown error"}`);
+        }
+      }
+
       if (!adSetId) {
         throw new Error("Please enter an ad set ID");
       }
@@ -461,7 +517,7 @@ export default function CreateRuleModal({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-2xl font-poppins font-semibold text-gray-900 mb-6">
-          Create Automated Rule
+          {isEditing ? "Edit Automated Rule" : "Create Automated Rule"}
         </h2>
 
         {success ? (

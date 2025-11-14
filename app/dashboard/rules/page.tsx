@@ -39,6 +39,7 @@ function RulesContent() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [editingRule, setEditingRule] = useState<Rule | null>(null);
 
   // Fetch rules on mount
   useEffect(() => {
@@ -195,6 +196,29 @@ function RulesContent() {
     }
   };
 
+  const handleEditRule = (rule: Rule) => {
+    setEditingRule(rule);
+    setShowCreateModal(true);
+  };
+
+  const handleEditComplete = async (oldRuleId: string) => {
+    // Delete the old rule and refresh the list
+    setRules(rules.filter(r => r.id !== oldRuleId));
+    setEditingRule(null);
+
+    // Refresh the rules list to show the new rule
+    try {
+      const response = await fetch(`/api/rules?adAccountId=${accountId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setRules(data || []);
+        toast.success("✅ Rule updated successfully!");
+      }
+    } catch (error) {
+      console.error("Error refreshing rules:", error);
+    }
+  };
+
   if (!accountId) {
     return (
       <div className="text-center py-12">
@@ -230,9 +254,16 @@ function RulesContent() {
       {showCreateModal && (
         <CreateRuleModal
           accountId={accountId}
-          onClose={() => setShowCreateModal(false)}
+          editingRule={editingRule}
+          onClose={() => {
+            setShowCreateModal(false);
+            setEditingRule(null);
+          }}
           onSuccess={() => {
             setShowCreateModal(false);
+            if (editingRule) {
+              handleEditComplete(editingRule.id);
+            }
           }}
         />
       )}
@@ -333,6 +364,13 @@ function RulesContent() {
                     >
                       {rule.status === "ACTIVE" || rule.status === "ENABLED" ? "🟢 Active" : "⏸️ Paused"}
                     </span>
+                    <button
+                      onClick={() => handleEditRule(rule)}
+                      className="px-3 py-1 rounded-lg text-xs font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                      title="Edit this rule"
+                    >
+                      ✏️ Edit
+                    </button>
                     <button
                       onClick={() => handleToggleRuleStatus(rule.id, rule.status, rule.name)}
                       disabled={updating === rule.id}
