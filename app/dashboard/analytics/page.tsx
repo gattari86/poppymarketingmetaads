@@ -198,12 +198,90 @@ function AnalyticsContent() {
     }
   }, [adAccountId, dateStart, dateEnd, scope, selectedCampaignId, selectedAdsetId]);
 
-  // Auto-fetch when scope changes to adset or ad (for drilldown)
+  // Auto-fetch when drilling down to ad set or ad level
   useEffect(() => {
-    if ((scope === "adset" || scope === "ad") && dateStart && dateEnd && adAccountId) {
-      handleFetchAnalytics();
+    if (scope === "adset" && selectedCampaignId && dateStart && dateEnd && adAccountId) {
+      console.log("🔄 Auto-fetching ad sets for campaign:", selectedCampaignId);
+      // Create a params string with all the needed values
+      const params = new URLSearchParams({
+        adAccountId,
+        dateStart,
+        dateEnd,
+        scope: "adset",
+        campaignId: selectedCampaignId,
+      });
+
+      const fetchAdSets = async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(`/api/analytics?${params}`);
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Failed to fetch analytics`);
+          }
+          const data = await response.json();
+          console.log("📊 Ad sets received:", data.data.adsets?.length);
+          setMetrics(null);
+          setCampaigns([]);
+          setAdsets(data.data.adsets || []);
+          setAds([]);
+          setDateRange(data.data.dateRange);
+          toast.success("Ad sets loaded");
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Error loading ad sets";
+          console.error("❌ Error:", msg);
+          setError(msg);
+          toast.error(msg);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchAdSets();
     }
-  }, [scope, selectedCampaignId, selectedAdsetId, handleFetchAnalytics]);
+  }, [scope, selectedCampaignId, dateStart, dateEnd, adAccountId]);
+
+  useEffect(() => {
+    if (scope === "ad" && selectedAdsetId && dateStart && dateEnd && adAccountId) {
+      console.log("🔄 Auto-fetching ads for ad set:", selectedAdsetId);
+      // Create a params string with all the needed values
+      const params = new URLSearchParams({
+        adAccountId,
+        dateStart,
+        dateEnd,
+        scope: "ad",
+        adsetId: selectedAdsetId,
+      });
+
+      const fetchAds = async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(`/api/analytics?${params}`);
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Failed to fetch analytics`);
+          }
+          const data = await response.json();
+          console.log("📊 Ads received:", data.data.ads?.length);
+          setMetrics(null);
+          setCampaigns([]);
+          setAdsets([]);
+          setAds(data.data.ads || []);
+          setDateRange(data.data.dateRange);
+          toast.success("Ads loaded");
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Error loading ads";
+          console.error("❌ Error:", msg);
+          setError(msg);
+          toast.error(msg);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchAds();
+    }
+  }, [scope, selectedAdsetId, dateStart, dateEnd, adAccountId]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
