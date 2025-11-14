@@ -352,6 +352,14 @@ function RulesContent() {
                       <p className="text-sm text-gray-700">
                         <span className="font-semibold">Action:</span> {getActionLabel(rule)}
                       </p>
+                      <div className="pt-2 border-t border-gray-200 mt-2 space-y-1">
+                        <p className="text-xs text-gray-500">
+                          <span className="font-semibold">Created:</span> {new Date(rule.created_time).toLocaleDateString()} {new Date(rule.created_time).toLocaleTimeString()}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          <span className="font-semibold">Last Modified:</span> {new Date(rule.updated_time).toLocaleDateString()} {new Date(rule.updated_time).toLocaleTimeString()}
+                        </p>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
