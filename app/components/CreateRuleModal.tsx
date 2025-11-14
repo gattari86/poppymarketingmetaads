@@ -117,55 +117,68 @@ export default function CreateRuleModal({
   }, [selectedCampaignId, accountId, adSetId]);
 
   const buildEvaluationSpec = () => {
+    // Meta's adrules_library API uses a trigger-based structure
+    // evaluation_spec contains: evaluation_type, trigger (with field, operator, value), and filters
+
     if (ruleType === "spend") {
       return {
-        metric: "spend",
-        comparison: "GREATER_THAN",
-        value: parseInt(spendThreshold),
-        time_window: 1, // 1 day
-        trigger: "ALL",
+        evaluation_type: "TRIGGER",
+        trigger: {
+          field: "spend",
+          operator: "GREATER_THAN",
+          value: parseInt(spendThreshold),
+        },
+        filters: [],
       };
     }
 
     if (ruleType === "roas") {
       return {
-        metric: "website_purchase_roas",
-        comparison: "LESS_THAN",
-        value: parseFloat(roasPauseThreshold),
-        time_window: parseInt(roasTimeWindow),
-        trigger: "ALL",
+        evaluation_type: "TRIGGER",
+        trigger: {
+          field: "website_purchase_roas",
+          operator: "LESS_THAN",
+          value: parseFloat(roasPauseThreshold),
+        },
+        filters: [],
       };
     }
 
     if (ruleType === "cpa") {
       return {
-        metric: "cost_per_purchase",
-        comparison: "GREATER_THAN",
-        value: parseInt(cpaPauseThreshold),
-        time_window: parseInt(cpaTimeWindow),
-        trigger: "ALL",
+        evaluation_type: "TRIGGER",
+        trigger: {
+          field: "cost_per_purchase",
+          operator: "GREATER_THAN",
+          value: parseInt(cpaPauseThreshold),
+        },
+        filters: [],
       };
     }
 
     if (ruleType === "time") {
-      // Time-based rules use a simple metric that's always true
-      // The scheduling is applied at a higher level in Meta's system
+      // Time-based rules - use a condition that's always true
+      // The actual scheduling is handled by the action execution
       if (timeRuleType === "hourly") {
         return {
-          metric: "impressions",
-          comparison: "GREATER_THAN",
-          value: 0, // Always true condition
-          time_window: 1, // Check every day
-          trigger: "ALL",
+          evaluation_type: "TRIGGER",
+          trigger: {
+            field: "impressions",
+            operator: "GREATER_THAN_OR_EQUAL",
+            value: 0, // Always true
+          },
+          filters: [],
         };
       } else {
         // Daily scheduling
         return {
-          metric: "impressions",
-          comparison: "GREATER_THAN",
-          value: 0,
-          time_window: 1,
-          trigger: "ALL",
+          evaluation_type: "TRIGGER",
+          trigger: {
+            field: "impressions",
+            operator: "GREATER_THAN_OR_EQUAL",
+            value: 0, // Always true
+          },
+          filters: [],
         };
       }
     }

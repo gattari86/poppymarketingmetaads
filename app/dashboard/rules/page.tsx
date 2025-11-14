@@ -14,11 +14,13 @@ interface Rule {
   name: string;
   status: string;
   evaluation_spec: {
-    metric: string;
-    comparison: string;
-    value: number;
-    time_window: number;
-    trigger: string;
+    evaluation_type: string;
+    trigger: {
+      field: string;
+      operator: string;
+      value: number;
+    };
+    filters: any[];
   };
   execution_spec: {
     actions: Array<{
@@ -62,49 +64,42 @@ function RulesContent() {
   }, [accountId]);
 
   const getRuleTypeIcon = (rule: Rule) => {
-    const metric = rule.evaluation_spec.metric;
-    if (metric === "spend") return "💰";
-    if (metric === "website_purchase_roas") return "📈";
-    if (metric === "cost_per_purchase") return "💵";
-    if (metric === "ctr") return "📊";
+    const field = rule.evaluation_spec.trigger.field;
+    if (field === "spend") return "💰";
+    if (field === "website_purchase_roas") return "📈";
+    if (field === "cost_per_purchase") return "💵";
+    if (field === "ctr") return "📊";
     return "⚙️";
   };
 
   const getRuleTypeLabel = (rule: Rule) => {
-    const metric = rule.evaluation_spec.metric;
-    if (metric === "spend") return "Spend-Based";
-    if (metric === "website_purchase_roas") return "ROAS-Based";
-    if (metric === "cost_per_purchase") return "CPA-Based";
-    if (metric === "ctr") return "CTR-Based";
+    const field = rule.evaluation_spec.trigger.field;
+    if (field === "spend") return "Spend-Based";
+    if (field === "website_purchase_roas") return "ROAS-Based";
+    if (field === "cost_per_purchase") return "CPA-Based";
+    if (field === "ctr") return "CTR-Based";
     return "Unknown";
   };
 
   const getMetricDisplay = (rule: Rule) => {
-    const metric = rule.evaluation_spec.metric;
-    const comparison = rule.evaluation_spec.comparison;
-    const value = rule.evaluation_spec.value;
+    const field = rule.evaluation_spec.trigger.field;
+    const operator = rule.evaluation_spec.trigger.operator;
+    const value = rule.evaluation_spec.trigger.value;
 
-    if (metric === "spend") {
+    if (field === "spend") {
       return `Pause when spend > $${value}`;
     }
-    if (metric === "website_purchase_roas") {
-      const comp = comparison === "LESS_THAN" ? "<" : ">";
+    if (field === "website_purchase_roas") {
+      const comp = operator === "LESS_THAN" ? "<" : ">";
       return `Pause when ROAS ${comp} ${value.toFixed(2)}x`;
     }
-    if (metric === "cost_per_purchase") {
-      const comp = comparison === "GREATER_THAN" ? ">" : "<";
+    if (field === "cost_per_purchase") {
+      const comp = operator === "GREATER_THAN" ? ">" : "<";
       return `Pause when CPA ${comp} $${value}`;
     }
-    return `${metric} ${comparison} ${value}`;
+    return `${field} ${operator} ${value}`;
   };
 
-  const getTimeWindowLabel = (days: number) => {
-    if (days === 1) return "Daily";
-    if (days === 7) return "Weekly";
-    if (days === 14) return "Bi-weekly";
-    if (days === 30) return "Monthly";
-    return `${days} days`;
-  };
 
   const getActionLabel = (rule: Rule) => {
     const action = rule.execution_spec.actions[0];
@@ -228,7 +223,7 @@ function RulesContent() {
                           {rule.name}
                         </h3>
                         <p className="text-xs text-gray-500">
-                          {getRuleTypeLabel(rule)} • {getTimeWindowLabel(rule.evaluation_spec.time_window)}
+                          {getRuleTypeLabel(rule)} • Trigger-Based
                         </p>
                       </div>
                     </div>
