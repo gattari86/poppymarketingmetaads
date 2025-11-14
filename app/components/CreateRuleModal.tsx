@@ -117,19 +117,26 @@ export default function CreateRuleModal({
   }, [selectedCampaignId, accountId, adSetId]);
 
   const buildEvaluationSpec = () => {
-    // Meta's adrules_library API uses a trigger-based structure
-    // evaluation_spec contains: evaluation_type, trigger (with type, field, operator, value), and filters
+    // Meta's adrules_library API uses STATS_CHANGE trigger type for performance metrics
+    // evaluation_spec contains: evaluation_type, trigger (with type: "STATS_CHANGE", field, operator, value), and filters
+    // Valid trigger types: METADATA_CREATION, METADATA_UPDATE, STATS_MILESTONE, STATS_CHANGE, DELIVERY_INSIGHTS_CHANGE
 
     if (ruleType === "spend") {
       return {
         evaluation_type: "TRIGGER",
         trigger: {
-          type: "PERFORMANCE_CONDITION",
+          type: "STATS_CHANGE",
           field: "spend",
           operator: "GREATER_THAN",
           value: parseInt(spendThreshold),
         },
-        filters: [],
+        filters: [
+          {
+            field: "time_preset",
+            value: "TODAY",
+            operator: "EQUAL",
+          },
+        ],
       };
     }
 
@@ -137,12 +144,18 @@ export default function CreateRuleModal({
       return {
         evaluation_type: "TRIGGER",
         trigger: {
-          type: "PERFORMANCE_CONDITION",
+          type: "STATS_CHANGE",
           field: "website_purchase_roas",
           operator: "LESS_THAN",
           value: parseFloat(roasPauseThreshold),
         },
-        filters: [],
+        filters: [
+          {
+            field: "time_preset",
+            value: "LAST_7_DAYS",
+            operator: "EQUAL",
+          },
+        ],
       };
     }
 
@@ -150,40 +163,58 @@ export default function CreateRuleModal({
       return {
         evaluation_type: "TRIGGER",
         trigger: {
-          type: "PERFORMANCE_CONDITION",
+          type: "STATS_CHANGE",
           field: "cost_per_purchase",
           operator: "GREATER_THAN",
           value: parseInt(cpaPauseThreshold),
         },
-        filters: [],
+        filters: [
+          {
+            field: "time_preset",
+            value: "LAST_7_DAYS",
+            operator: "EQUAL",
+          },
+        ],
       };
     }
 
     if (ruleType === "time") {
-      // Time-based rules - use a condition that's always true
+      // Time-based rules - use STATS_CHANGE with impressions as a gauge
       // The actual scheduling is handled by the action execution
       if (timeRuleType === "hourly") {
         return {
           evaluation_type: "TRIGGER",
           trigger: {
-            type: "PERFORMANCE_CONDITION",
+            type: "STATS_CHANGE",
             field: "impressions",
             operator: "GREATER_THAN_OR_EQUAL",
             value: 0, // Always true
           },
-          filters: [],
+          filters: [
+            {
+              field: "time_preset",
+              value: "TODAY",
+              operator: "EQUAL",
+            },
+          ],
         };
       } else {
         // Daily scheduling
         return {
           evaluation_type: "TRIGGER",
           trigger: {
-            type: "PERFORMANCE_CONDITION",
+            type: "STATS_CHANGE",
             field: "impressions",
             operator: "GREATER_THAN_OR_EQUAL",
             value: 0, // Always true
           },
-          filters: [],
+          filters: [
+            {
+              field: "time_preset",
+              value: "TODAY",
+              operator: "EQUAL",
+            },
+          ],
         };
       }
     }
