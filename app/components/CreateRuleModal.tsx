@@ -322,7 +322,7 @@ export default function CreateRuleModal({
             schedule_spec: {
               schedule_type: timeRuleType === "hourly" ? "HOURLY" : "DAILY",
             },
-            status: "ACTIVE",
+            status: "ENABLED",
           }),
         }
       );
@@ -374,7 +374,7 @@ export default function CreateRuleModal({
               schedule_spec: {
                 schedule_type: "DAILY",
               },
-              status: "ACTIVE",
+              status: "ENABLED",
             }),
           }
         );
@@ -426,7 +426,7 @@ export default function CreateRuleModal({
               schedule_spec: {
                 schedule_type: "DAILY",
               },
-              status: "ACTIVE",
+              status: "ENABLED",
             }),
           }
         );
@@ -460,7 +460,7 @@ export default function CreateRuleModal({
               schedule_spec: {
                 schedule_type: timeRuleType === "hourly" ? "HOURLY" : "DAILY",
               },
-              status: "ACTIVE",
+              status: "ENABLED",
             }),
           }
         );
