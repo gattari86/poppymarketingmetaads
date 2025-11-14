@@ -119,13 +119,9 @@ export default function CreateRuleModal({
   const buildEvaluationSpec = () => {
     if (ruleType === "spend") {
       return {
-        evaluations: [
-          {
-            metric: "spend",
-            comparison: "GREATER_THAN",
-            value: parseInt(spendThreshold),
-          },
-        ],
+        metric: "spend",
+        comparison: "GREATER_THAN",
+        value: parseInt(spendThreshold),
         time_window: 1, // 1 day
         trigger: "ALL",
       };
@@ -133,13 +129,9 @@ export default function CreateRuleModal({
 
     if (ruleType === "roas") {
       return {
-        evaluations: [
-          {
-            metric: "website_purchase_roas",
-            comparison: "LESS_THAN",
-            value: parseFloat(roasPauseThreshold),
-          },
-        ],
+        metric: "website_purchase_roas",
+        comparison: "LESS_THAN",
+        value: parseFloat(roasPauseThreshold),
         time_window: parseInt(roasTimeWindow),
         trigger: "ALL",
       };
@@ -147,13 +139,9 @@ export default function CreateRuleModal({
 
     if (ruleType === "cpa") {
       return {
-        evaluations: [
-          {
-            metric: "cost_per_purchase",
-            comparison: "GREATER_THAN",
-            value: parseInt(cpaPauseThreshold),
-          },
-        ],
+        metric: "cost_per_purchase",
+        comparison: "GREATER_THAN",
+        value: parseInt(cpaPauseThreshold),
         time_window: parseInt(cpaTimeWindow),
         trigger: "ALL",
       };
@@ -164,26 +152,18 @@ export default function CreateRuleModal({
       // The scheduling is applied at a higher level in Meta's system
       if (timeRuleType === "hourly") {
         return {
-          evaluations: [
-            {
-              metric: "impressions",
-              comparison: "GREATER_THAN",
-              value: 0, // Always true condition
-            },
-          ],
+          metric: "impressions",
+          comparison: "GREATER_THAN",
+          value: 0, // Always true condition
           time_window: 1, // Check every day
           trigger: "ALL",
         };
       } else {
         // Daily scheduling
         return {
-          evaluations: [
-            {
-              metric: "impressions",
-              comparison: "GREATER_THAN",
-              value: 0,
-            },
-          ],
+          metric: "impressions",
+          comparison: "GREATER_THAN",
+          value: 0,
           time_window: 1,
           trigger: "ALL",
         };
