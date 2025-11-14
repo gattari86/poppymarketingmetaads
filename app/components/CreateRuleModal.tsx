@@ -8,7 +8,7 @@ interface CreateRuleModalProps {
   onSuccess: () => void;
 }
 
-type RuleType = "spend" | "roas" | "cpa";
+type RuleType = "spend" | "roas" | "cpa" | "time";
 
 export default function CreateRuleModal({
   accountId,
@@ -36,6 +36,13 @@ export default function CreateRuleModal({
   const [cpaUnpauseThreshold, setCpaUnpauseThreshold] = useState("40");
   const [cpaTimeWindow, setCpaTimeWindow] = useState("7"); // days
   const [enableCpaAutoUnpause, setEnableCpaAutoUnpause] = useState(true);
+
+  // Time-Based Rule Fields (Dayparting)
+  const [timeRuleType, setTimeRuleType] = useState<"hourly" | "daily">("hourly");
+  const [pauseHour, setPauseHour] = useState("18"); // 6 PM
+  const [unpauseHour, setUnpauseHour] = useState("9"); // 9 AM
+  const [pauseDays, setPauseDays] = useState<string[]>(["Saturday", "Sunday"]); // Weekend by default
+  const [timezone, setTimezone] = useState("America/Chicago"); // Default timezone
 
   const buildEvaluationSpec = () => {
     if (ruleType === "spend") {
@@ -78,6 +85,37 @@ export default function CreateRuleModal({
         time_window: parseInt(cpaTimeWindow),
         trigger: "ALL",
       };
+    }
+
+    if (ruleType === "time") {
+      // Time-based rules use a simple metric that's always true
+      // The scheduling is applied at a higher level in Meta's system
+      if (timeRuleType === "hourly") {
+        return {
+          evaluations: [
+            {
+              metric: "impressions",
+              comparison: "GREATER_THAN",
+              value: 0, // Always true condition
+            },
+          ],
+          time_window: 1, // Check every day
+          trigger: "ALL",
+        };
+      } else {
+        // Daily scheduling
+        return {
+          evaluations: [
+            {
+              metric: "impressions",
+              comparison: "GREATER_THAN",
+              value: 0,
+            },
+          ],
+          time_window: 1,
+          trigger: "ALL",
+        };
+      }
     }
 
     throw new Error("Invalid rule type");
@@ -147,6 +185,23 @@ export default function CreateRuleModal({
         }
         if (enableCpaAutoUnpause && unpauseVal >= pauseVal) {
           throw new Error("Unpause threshold must be lower than pause threshold");
+        }
+      }
+
+      if (ruleType === "time") {
+        if (timeRuleType === "hourly") {
+          const pauseH = parseInt(pauseHour);
+          const unpauseH = parseInt(unpauseHour);
+          if (pauseH < 0 || pauseH > 23) {
+            throw new Error("Pause hour must be between 0-23");
+          }
+          if (unpauseH < 0 || unpauseH > 23) {
+            throw new Error("Unpause hour must be between 0-23");
+          }
+        } else if (timeRuleType === "daily") {
+          if (pauseDays.length === 0) {
+            throw new Error("Please select at least one day to pause");
+          }
         }
       }
 
@@ -243,6 +298,37 @@ export default function CreateRuleModal({
         }
       }
 
+      // If time-based rule, create companion unpause rule
+      if (ruleType === "time") {
+        const unpauseExecutionSpec = buildExecutionSpec(false);
+        let unpauseRuleName = ruleName;
+        let unpauseEvaluationSpec = buildEvaluationSpec();
+
+        if (timeRuleType === "hourly") {
+          unpauseRuleName = `${ruleName} (Auto-Unpause at ${unpauseHour}:00)`;
+        } else {
+          unpauseRuleName = `${ruleName} (Resume on Weekdays)`;
+        }
+
+        const unpauseRuleResponse = await fetch(
+          `/api/rules?adAccountId=${accountId}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: unpauseRuleName,
+              evaluation_spec: unpauseEvaluationSpec,
+              execution_spec: unpauseExecutionSpec,
+              status: "ACTIVE",
+            }),
+          }
+        );
+
+        if (!unpauseRuleResponse.ok) {
+          console.warn("Unpause rule creation failed, but pause rule succeeded");
+        }
+      }
+
       setSuccess(true);
       setRuleName("");
       setSpendThreshold("500");
@@ -250,6 +336,9 @@ export default function CreateRuleModal({
       setRoasUnpauseThreshold("2.00");
       setCpaPauseThreshold("50");
       setCpaUnpauseThreshold("40");
+      setPauseHour("18");
+      setUnpauseHour("9");
+      setPauseDays(["Saturday", "Sunday"]);
       setAdSetId("");
 
       setTimeout(() => {
@@ -286,11 +375,11 @@ export default function CreateRuleModal({
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Rule Type
               </label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   type="button"
                   onClick={() => setRuleType("spend")}
-                  className={`px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                  className={`px-3 py-2 sm:px-4 sm:py-3 rounded-lg font-medium text-xs sm:text-sm transition-all ${
                     ruleType === "spend"
                       ? "bg-poppy-dark-purple text-white shadow-lg"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -301,7 +390,7 @@ export default function CreateRuleModal({
                 <button
                   type="button"
                   onClick={() => setRuleType("roas")}
-                  className={`px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                  className={`px-3 py-2 sm:px-4 sm:py-3 rounded-lg font-medium text-xs sm:text-sm transition-all ${
                     ruleType === "roas"
                       ? "bg-poppy-dark-purple text-white shadow-lg"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -312,13 +401,24 @@ export default function CreateRuleModal({
                 <button
                   type="button"
                   onClick={() => setRuleType("cpa")}
-                  className={`px-4 py-3 rounded-lg font-medium text-sm transition-all ${
+                  className={`px-3 py-2 sm:px-4 sm:py-3 rounded-lg font-medium text-xs sm:text-sm transition-all ${
                     ruleType === "cpa"
                       ? "bg-poppy-dark-purple text-white shadow-lg"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   💵 CPA
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRuleType("time")}
+                  className={`px-3 py-2 sm:px-4 sm:py-3 rounded-lg font-medium text-xs sm:text-sm transition-all ${
+                    ruleType === "time"
+                      ? "bg-poppy-dark-purple text-white shadow-lg"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  🕐 Time-Based
                 </button>
               </div>
             </div>
@@ -337,7 +437,9 @@ export default function CreateRuleModal({
                     ? "e.g., Pause when spend hits $500"
                     : ruleType === "roas"
                     ? "e.g., Pause when ROAS drops below 1.5x"
-                    : "e.g., Pause when CPA exceeds $50"
+                    : ruleType === "cpa"
+                    ? "e.g., Pause when CPA exceeds $50"
+                    : "e.g., Pause after business hours"
                 }
                 className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple"
               />
@@ -529,6 +631,138 @@ export default function CreateRuleModal({
                       CPA will be measured over this period
                     </p>
                   </div>
+                </div>
+              </>
+            )}
+
+            {/* Time-Based Rule Fields (Dayparting) */}
+            {ruleType === "time" && (
+              <>
+                <div className="space-y-3 bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <p className="text-xs font-semibold text-purple-900 mb-2">
+                    🕐 Time-Based Automation (Dayparting)
+                  </p>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-2">
+                      Schedule Type
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTimeRuleType("hourly")}
+                        className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition-all ${
+                          timeRuleType === "hourly"
+                            ? "bg-poppy-dark-purple text-white shadow-lg"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        ⏰ Hourly
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTimeRuleType("daily")}
+                        className={`flex-1 px-3 py-2 rounded-lg font-medium text-xs transition-all ${
+                          timeRuleType === "daily"
+                            ? "bg-poppy-dark-purple text-white shadow-lg"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        📅 Daily
+                      </button>
+                    </div>
+                  </div>
+
+                  {timeRuleType === "hourly" && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Pause at hour (24-hour format)
+                        </label>
+                        <select
+                          value={pauseHour}
+                          onChange={(e) => setPauseHour(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple text-sm"
+                        >
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <option key={i} value={String(i)}>
+                              {String(i).padStart(2, "0")}:00 ({i < 12 ? i === 0 ? "12 AM" : `${i} AM` : i === 12 ? "12 PM" : `${i - 12} PM`})
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          e.g., 18 = 6:00 PM
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Resume at hour
+                        </label>
+                        <select
+                          value={unpauseHour}
+                          onChange={(e) => setUnpauseHour(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple text-sm"
+                        >
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <option key={i} value={String(i)}>
+                              {String(i).padStart(2, "0")}:00 ({i < 12 ? i === 0 ? "12 AM" : `${i} AM` : i === 12 ? "12 PM" : `${i - 12} PM`})
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          e.g., 9 = 9:00 AM
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Timezone
+                        </label>
+                        <select
+                          value={timezone}
+                          onChange={(e) => setTimezone(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-poppy-dark-purple text-sm"
+                        >
+                          <option value="America/New_York">Eastern Time (ET)</option>
+                          <option value="America/Chicago">Central Time (CT)</option>
+                          <option value="America/Denver">Mountain Time (MT)</option>
+                          <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                          <option value="UTC">UTC</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
+
+                  {timeRuleType === "daily" && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                        Days to pause
+                      </label>
+                      <div className="space-y-2">
+                        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
+                          <label key={day} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={pauseDays.includes(day)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setPauseDays([...pauseDays, day]);
+                                } else {
+                                  setPauseDays(pauseDays.filter((d) => d !== day));
+                                }
+                              }}
+                              className="w-4 h-4 text-poppy-dark-purple rounded"
+                            />
+                            <span className="text-sm text-gray-700">{day}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Currently pausing: {pauseDays.length > 0 ? pauseDays.join(", ") : "No days selected"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </>
             )}
